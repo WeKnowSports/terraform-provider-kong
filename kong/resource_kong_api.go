@@ -78,14 +78,7 @@ func resourceKongAPI() *schema.Resource {
 func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	api := &API{
-		Name:             d.Get("name").(string),
-		RequestHost:      d.Get("request_host").(string),
-		RequestPath:      d.Get("request_path").(string),
-		StripRequestPath: d.Get("strip_request_path").(bool),
-		PreserveHost:     d.Get("preserve_host").(bool),
-		UpstreamURL:      d.Get("upstream_url").(string),
-	}
+	api := getAPIFromResourceData(d)
 
 	createdAPI := new(API)
 
@@ -98,22 +91,49 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf(response.Status)
 	}
 
-	d.SetId(createdAPI.ID)
-	d.Set("name", createdAPI.Name)
-	d.Set("request_host", createdAPI.RequestHost)
-	d.Set("request_path", createdAPI.RequestPath)
-	d.Set("strip_request_path", createdAPI.StripRequestPath)
-	d.Set("preserve_host", createdAPI.PreserveHost)
-	d.Set("upstream_url", createdAPI.UpstreamURL)
+	setAPIToResourceData(d, createdAPI)
 
 	return nil
 }
 
 func resourceKongAPIRead(d *schema.ResourceData, meta interface{}) error {
+	sling := meta.(*sling.Sling)
+
+	id := d.Get("id").(string)
+	api := new(API)
+
+	response, error := sling.New().Path("apis/").Get(id).ReceiveSuccess(api)
+	if error != nil {
+		return fmt.Errorf("Error while updating API.")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf(response.Status)
+	}
+
+	setAPIToResourceData(d, api)
+
 	return nil
 }
 
 func resourceKongAPIUpdate(d *schema.ResourceData, meta interface{}) error {
+	sling := meta.(*sling.Sling)
+
+	api := getAPIFromResourceData(d)
+
+	updatedAPI := new(API)
+
+	response, error := sling.New().BodyJSON(api).Patch("apis/").Path(api.ID).ReceiveSuccess(updatedAPI)
+	if error != nil {
+		return fmt.Errorf("Error while updating API.")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf(response.Status)
+	}
+
+	setAPIToResourceData(d, updatedAPI)
+
 	return nil
 }
 
@@ -132,4 +152,31 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func getAPIFromResourceData(d *schema.ResourceData) *API {
+	api := &API{
+		Name:             d.Get("name").(string),
+		RequestHost:      d.Get("request_host").(string),
+		RequestPath:      d.Get("request_path").(string),
+		StripRequestPath: d.Get("strip_request_path").(bool),
+		PreserveHost:     d.Get("preserve_host").(bool),
+		UpstreamURL:      d.Get("upstream_url").(string),
+	}
+
+	if id, ok := d.GetOk("id"); ok {
+		api.ID = id.(string)
+	}
+
+	return api
+}
+
+func setAPIToResourceData(d *schema.ResourceData, api *API) {
+	d.SetId(api.ID)
+	d.Set("name", api.Name)
+	d.Set("request_host", api.RequestHost)
+	d.Set("request_path", api.RequestPath)
+	d.Set("strip_request_path", api.StripRequestPath)
+	d.Set("preserve_host", api.PreserveHost)
+	d.Set("upstream_url", api.UpstreamURL)
 }
