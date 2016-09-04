@@ -29,3 +29,16 @@ resource "kong_api" "api3" {
     request_path       = "/api3"
     strip_request_path = true
 }
+
+resource "kong_consumer" "consumer1" {
+    username = "consumer1"
+}
+
+resource "kong_consumer" "consumer2" {
+    username = "consumer2"
+}
+
+resource "kong_consumer" "consumer3" {
+    username  = "asdff"
+    custom_id = "123456"
+}
