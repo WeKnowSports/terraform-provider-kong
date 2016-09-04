@@ -1,12 +1,31 @@
 provider "kong" {
-    address = "http://localhost:8001/"
+    address = "http://192.168.99.100:8001"
 }
 
-resource "kong_api" "api" {
-    name               = "api"
-    request_host       = "api.local"
-    request_path       = "api"
+resource "kong_api" "api0" {
+    name               = "test1"
+    upstream_url       = "http://api.local"
+    request_path       = "/api0"
     strip_request_path = true
-    preserver_host     = false
-    upstream_url       = "http://api.local/"
+}
+
+resource "kong_api" "api1" {
+    name               = "test2"
+    upstream_url       = "http://api.local"
+    request_path       = "/api1"
+    strip_request_path = true
+}
+
+resource "kong_api" "api2" {
+    name               = "test3"
+    upstream_url       = "http://api.local"
+    request_path       = "/api2"
+    strip_request_path = true
+}
+
+resource "kong_api" "api3" {
+    name               = "test4"
+    upstream_url       = "http://api.local"
+    request_path       = "/api3"
+    strip_request_path = true
 }
