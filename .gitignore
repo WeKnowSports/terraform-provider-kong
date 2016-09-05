@@ -26,3 +26,5 @@ _testmain.go
 *.tfstate
 *.tfstate.backup
 .terraform/*
+
+*.log
