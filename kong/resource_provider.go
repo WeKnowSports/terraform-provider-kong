@@ -16,10 +16,11 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"kong_api":                 resourceKongAPI(),
-			"kong_consumer":            resourceKongConsumer(),
-			"kong_api_plugin":          resourceKongPlugin(),
-			"kong_consumer_credential": resourceKongBasicAuthCredential(),
+			"kong_api":                            resourceKongAPI(),
+			"kong_consumer":                       resourceKongConsumer(),
+			"kong_api_plugin":                     resourceKongPlugin(),
+			"kong_consumer_basic_auth_credential": resourceKongBasicAuthCredential(),
+			"kong_consumer_jwt_credential":        resourceKongJWTCredential(),
 		},
 
 		ConfigureFunc: providerConfigure,

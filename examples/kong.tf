@@ -49,14 +49,24 @@ resource "kong_api_plugin" "basic_auth" {
     name = "basic-auth"
 }
 
-resource "kong_consumer_credential" "basic_auth_credential1" {
+resource "kong_api_plugin" "jwt" {
+    api = "${kong_api.api0.id}"
+    name = "jwt"
+}
+
+resource "kong_consumer_basic_auth_credential" "basic_auth_credential1" {
     consumer = "${kong_consumer.consumer3.id}"
     username = "user123"
     password = "secret"
 }
 
-resource "kong_consumer_credential" "basic_auth_credential2" {
+resource "kong_consumer_basic_auth_credential" "basic_auth_credential2" {
     consumer = "${kong_consumer.consumer3.id}"
     username = "user1234"
     password = "secret12"
+}
+
+resource "kong_consumer_jwt_credential" "jwt_credential1" {
+    consumer = "${kong_consumer.consumer3.id}"
+    secret   = "secret12"
 }
