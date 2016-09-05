@@ -28,3 +28,6 @@ _testmain.go
 .terraform/*
 
 *.log
+
+terraform-provider-kong
+.vscode/
