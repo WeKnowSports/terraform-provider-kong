@@ -102,8 +102,13 @@ func (b *ApplyGraphBuilder) Steps() []GraphTransformer {
 		),
 
 		// Provisioner-related transformations
-		&MissingProvisionerTransformer{Provisioners: b.Provisioners},
-		&ProvisionerTransformer{},
+		GraphTransformIf(
+			func() bool { return !b.Destroy },
+			GraphTransformMulti(
+				&MissingProvisionerTransformer{Provisioners: b.Provisioners},
+				&ProvisionerTransformer{},
+			),
+		),
 
 		// Add root variables
 		&RootVariableTransformer{Module: b.Module},

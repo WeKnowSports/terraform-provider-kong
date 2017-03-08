@@ -70,8 +70,16 @@ func (n *NodeApplyableResource) EvalTree() EvalNode {
 		resource.CountIndex = 0
 	}
 
-	// Determine the dependencies for the state.
-	stateDeps := n.StateReferences()
+	// Determine the dependencies for the state. We use some older
+	// code for this that we've used for a long time.
+	var stateDeps []string
+	{
+		oldN := &graphNodeExpandedResource{
+			Resource: n.Config,
+			Index:    addr.Index,
+		}
+		stateDeps = oldN.StateDependencies()
+	}
 
 	// Eval info is different depending on what kind of resource this is
 	switch n.Config.Mode {
@@ -290,12 +298,6 @@ func (n *NodeApplyableResource) evalTreeManagedResource(
 				Name:   stateId,
 				Output: &state,
 			},
-			// Call pre-apply hook
-			&EvalApplyPre{
-				Info:  info,
-				State: &state,
-				Diff:  &diffApply,
-			},
 			&EvalApply{
 				Info:      info,
 				State:     &state,
@@ -319,7 +321,6 @@ func (n *NodeApplyableResource) evalTreeManagedResource(
 				InterpResource: resource,
 				CreateNew:      &createNew,
 				Error:          &err,
-				When:           config.ProvisionerWhenCreate,
 			},
 			&EvalIf{
 				If: func(ctx EvalContext) (bool, error) {

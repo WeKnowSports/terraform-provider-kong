@@ -36,3 +36,7 @@ type graphNodeRoot struct{}
 func (n graphNodeRoot) Name() string {
 	return rootNodeName
 }
+
+func (n graphNodeRoot) Flatten(p []string) (dag.Vertex, error) {
+	return n, nil
+}
