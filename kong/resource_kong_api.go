@@ -3,7 +3,6 @@ package kong
 import (
 	"fmt"
 	"net/http"
-
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -11,9 +10,9 @@ import (
 type API struct {
 	ID               string `json:"id,omitempty"`
 	Name             string `json:"name,omitempty"`
-	RequestHost      string `json:"request_host,omitempty"`
+	Hosts            []interface{} `json:"hosts,omitempty"`
 	RequestPath      string `json:"request_path,omitempty"`
-	StripRequestPath bool   `json:"strip_request_path,omitempty"`
+	StripUri         bool   `json:"strip_uri,omitempty"`
 	PreserveHost     bool   `json:"preserve_host,omitempty"`
 	UpstreamURL      string `json:"upstream_url"`
 }
@@ -38,8 +37,9 @@ func resourceKongAPI() *schema.Resource {
 				Description: "The API name. If none is specified, will default to the request_host or request_path.",
 			},
 
-			"request_host": &schema.Schema{
-				Type:        schema.TypeString,
+			"hosts": &schema.Schema{
+				Type:        schema.TypeList,
+				Elem:				 &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Default:     nil,
 				Description: "The public DNS address that points to your API. For example, mockbin.com. At least request_host or request_path or both should be specified.",
@@ -52,7 +52,7 @@ func resourceKongAPI() *schema.Resource {
 				Description: "The public path that points to your API. For example, /someservice. At least request_host or request_path or both should be specified.",
 			},
 
-			"strip_request_path": &schema.Schema{
+			"strip_uri": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -104,7 +104,7 @@ func resourceKongAPIRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Path("apis/").Get(id).ReceiveSuccess(api)
 	if error != nil {
-		return fmt.Errorf("Error while updating API.")
+		return fmt.Errorf("Error while reading API.")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -157,9 +157,9 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 func getAPIFromResourceData(d *schema.ResourceData) *API {
 	api := &API{
 		Name:             d.Get("name").(string),
-		RequestHost:      d.Get("request_host").(string),
+		Hosts:      			d.Get("hosts").([]interface{}),
 		RequestPath:      d.Get("request_path").(string),
-		StripRequestPath: d.Get("strip_request_path").(bool),
+		StripUri:         d.Get("strip_uri").(bool),
 		PreserveHost:     d.Get("preserve_host").(bool),
 		UpstreamURL:      d.Get("upstream_url").(string),
 	}
@@ -174,9 +174,9 @@ func getAPIFromResourceData(d *schema.ResourceData) *API {
 func setAPIToResourceData(d *schema.ResourceData, api *API) {
 	d.SetId(api.ID)
 	d.Set("name", api.Name)
-	d.Set("request_host", api.RequestHost)
+	d.Set("hosts", api.Hosts)
 	d.Set("request_path", api.RequestPath)
-	d.Set("strip_request_path", api.StripRequestPath)
+	d.Set("strip_uri", api.StripUri)
 	d.Set("preserve_host", api.PreserveHost)
 	d.Set("upstream_url", api.UpstreamURL)
 }
