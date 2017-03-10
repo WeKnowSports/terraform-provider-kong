@@ -6,14 +6,18 @@ Uses [Terraform](http://www.terraform.io) to configure APIs in [Kong](http://www
 
 ```Terraform
 provider "kong" {
+   address = "http://localhost:8001"
+}
+
+provider "kong" {
     address = "http://192.168.99.100:8001"
 }
 
 resource "kong_api" "api" {
-    name               = "api"
+    name               = "test"
     upstream_url       = "http://api.local"
-    request_path       = "/api"
-    strip_request_path = true
+    uris               = ["/api"]
+    strip_uri          = true
 }
 
 resource "kong_consumer" "consumer" {
