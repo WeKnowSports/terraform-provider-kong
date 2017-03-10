@@ -2,29 +2,27 @@ package kong
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
 type API struct {
-	ID                     string        `json:"id,omitempty"`
-	Name                   string        `json:"name,omitempty"`
-	Hosts                  []interface{} `json:"hosts,omitempty"`
-	URIs                   []interface{} `json:"uris"`
-	StripURI               bool          `json:"strip_uri,omitempty"`
-	PreserveHost           bool          `json:"preserve_host,omitempty"`
-	UpstreamURL            string        `json:"upstream_url,omitempty"`
-	Methods                []interface{} `json:"methods,omitempty"`
-	Retries                int           `json:"retries,omitempty"`
-	HTTPSOnly              bool          `json:"https_only,omitempty"`
-	HTTPIfTerminated       bool          `json:"http_if_terminated,omitempty"`
-	UpstreamConnectTimeout int           `json:"upstream_connect_timeout,omitempty"`
-	UpstreamSendTimeout    int           `json:"upstream_send_timeout,omitempty"`
-	UpstreamReadTimeout    int           `json:"upstream_read_timeout,omitempty"`
+	ID                     string      `json:"id,omitempty"`
+	Name                   string      `json:"name,omitempty"`
+	Hosts                  interface{} `json:"hosts,omitempty"`
+	URIs                   interface{} `json:"uris,omitempty"`
+	StripURI               bool        `json:"strip_uri,omitempty"`
+	PreserveHost           bool        `json:"preserve_host,omitempty"`
+	UpstreamURL            string      `json:"upstream_url,omitempty"`
+	Methods                interface{} `json:"methods,omitempty"`
+	Retries                int         `json:"retries,omitempty"`
+	HTTPSOnly              bool        `json:"https_only,omitempty"`
+	HTTPIfTerminated       bool        `json:"http_if_terminated,omitempty"`
+	UpstreamConnectTimeout int         `json:"upstream_connect_timeout,omitempty"`
+	UpstreamSendTimeout    int         `json:"upstream_send_timeout,omitempty"`
+	UpstreamReadTimeout    int         `json:"upstream_read_timeout,omitempty"`
 }
 
 func resourceKongAPI() *schema.Resource {
@@ -138,18 +136,11 @@ func resourceKongAPI() *schema.Resource {
 
 func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
-	log.Println("RESOURCE KONG API CREATE")
 	api := getAPIFromResourceData(d)
 
 	createdAPI := new(API)
 
 	response, error := sling.New().BodyJSON(api).Post("apis/").ReceiveSuccess(createdAPI)
-	log.Println("RESPONSE IN RESOURCE KONG API CREATE")
-	// str := spew.Sdump(response)
-	// log.Print(str)
-	err := spew.Sdump(error)
-	log.Print(err)
-
 	if error != nil {
 		return fmt.Errorf("Error while creating API.")
 	}
@@ -224,12 +215,12 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 func getAPIFromResourceData(d *schema.ResourceData) *API {
 	api := &API{
 		Name:                   d.Get("name").(string),
-		Hosts:                  d.Get("hosts").([]interface{}),
-		URIs:                   d.Get("uris").([]interface{}),
+		Hosts:                  d.Get("hosts"),
+		URIs:                   d.Get("uris"),
 		StripURI:               d.Get("strip_uri").(bool),
 		PreserveHost:           d.Get("preserve_host").(bool),
 		UpstreamURL:            d.Get("upstream_url").(string),
-		Methods:                d.Get("methods").([]interface{}),
+		Methods:                d.Get("methods"),
 		Retries:                d.Get("retries").(int),
 		HTTPSOnly:              d.Get("https_only").(bool),
 		HTTPIfTerminated:       d.Get("http_if_terminated").(bool),
