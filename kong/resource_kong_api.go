@@ -94,7 +94,7 @@ func resourceKongAPI() *schema.Resource {
 			"retries": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     nil,
+				Default:     5,
 				Description: "The number of retries to execute upon failure to proxy. The default is 5.",
 			},
 
@@ -108,28 +108,28 @@ func resourceKongAPI() *schema.Resource {
 			"http_if_terminated": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     nil,
+				Default:     true,
 				Description: "Consider the X-Forwarded-Proto header when enforcing HTTPS only traffic. Default: true.",
 			},
 
 			"upstream_connect_timeout": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     nil,
+				Default:     60000,
 				Description: "The timeout in milliseconds for establishing a connection to your upstream service. Defaults to 60000.",
 			},
 
 			"upstream_send_timeout": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     nil,
+				Default:     60000,
 				Description: "The timeout in milliseconds between two successive write operations for transmitting a request to your upstream service Defaults to 60000.",
 			},
 
 			"upstream_read_timeout": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     nil,
+				Default:     60000,
 				Description: "The timeout in milliseconds between two successive read operations for transmitting a request to your upstream service Defaults to 60000.",
 			},
 		},
