@@ -17,11 +17,11 @@ type API struct {
 	URIs                   []interface{} `json:"uris"`
 	StripURI               bool          `json:"strip_uri,omitempty"`
 	PreserveHost           bool          `json:"preserve_host,omitempty"`
-	UpstreamURL            string        `json:"upstream_url"`
-	Methods                string        `json:"methods"`
-	Retries                int           `json:"retries"`
-	HTTPSOnly              bool          `json:"https_only"`
-	HTTPIfTerminated       bool          `json:"http_if_terminated"`
+	UpstreamURL            string        `json:"upstream_url,omitempty"`
+	Methods                []interface{} `json:"methods,omitempty"`
+	Retries                int           `json:"retries,omitempty"`
+	HTTPSOnly              bool          `json:"https_only,omitempty"`
+	HTTPIfTerminated       bool          `json:"http_if_terminated,omitempty"`
 	UpstreamConnectTimeout int           `json:"upstream_connect_timeout,omitempty"`
 	UpstreamSendTimeout    int           `json:"upstream_send_timeout,omitempty"`
 	UpstreamReadTimeout    int           `json:"upstream_read_timeout,omitempty"`
@@ -84,7 +84,8 @@ func resourceKongAPI() *schema.Resource {
 			},
 
 			"methods": &schema.Schema{
-				Type:        schema.TypeString,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Default:     nil,
 				Description: "A comma-separated list of HTTP methods that point to your API. For example: GET,POST. At least one of hosts, uris, or methods should be specified.",
@@ -105,8 +106,9 @@ func resourceKongAPI() *schema.Resource {
 			},
 
 			"http_if_terminated": &schema.Schema{
-				Type:        schema.TypeInt,
+				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     nil,
 				Description: "Consider the X-Forwarded-Proto header when enforcing HTTPS only traffic. Default: true.",
 			},
 
@@ -141,12 +143,12 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 
 	createdAPI := new(API)
 
-	var data interface{} // TopTracks
-	response, error := sling.New().BodyJSON(api).Post("apis/").ReceiveSuccess(data)
+	response, error := sling.New().BodyJSON(api).Post("apis/").ReceiveSuccess(createdAPI)
 	log.Println("RESPONSE IN RESOURCE KONG API CREATE")
-	log.Print(data)
-	str := spew.Sdump(response)
-	log.Print(str)
+	// str := spew.Sdump(response)
+	// log.Print(str)
+	err := spew.Sdump(error)
+	log.Print(err)
 
 	if error != nil {
 		return fmt.Errorf("Error while creating API.")
@@ -221,16 +223,16 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getAPIFromResourceData(d *schema.ResourceData) *API {
 	api := &API{
-		Name:         d.Get("name").(string),
-		Hosts:        d.Get("hosts").([]interface{}),
-		URIs:         d.Get("uris").([]interface{}),
-		StripURI:     d.Get("strip_uri").(bool),
-		PreserveHost: d.Get("preserve_host").(bool),
-		UpstreamURL:  d.Get("upstream_url").(string),
-		Methods:      d.Get("methods").(string),
-		Retries:      d.Get("retries").(int),
-		HTTPSOnly:    d.Get("https_only").(bool),
-		// HTTPIfTerminated:       d.Get("http_if_terminated").(bool),
+		Name:                   d.Get("name").(string),
+		Hosts:                  d.Get("hosts").([]interface{}),
+		URIs:                   d.Get("uris").([]interface{}),
+		StripURI:               d.Get("strip_uri").(bool),
+		PreserveHost:           d.Get("preserve_host").(bool),
+		UpstreamURL:            d.Get("upstream_url").(string),
+		Methods:                d.Get("methods").([]interface{}),
+		Retries:                d.Get("retries").(int),
+		HTTPSOnly:              d.Get("https_only").(bool),
+		HTTPIfTerminated:       d.Get("http_if_terminated").(bool),
 		UpstreamConnectTimeout: d.Get("upstream_connect_timeout").(int),
 		UpstreamSendTimeout:    d.Get("upstream_send_timeout").(int),
 		UpstreamReadTimeout:    d.Get("upstream_read_timeout").(int),
