@@ -23,26 +23,26 @@ func resourceKongPlugin() *schema.Resource {
 		Delete: resourceKongPluginDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "The name of the plugin to use.",
 			},
 
-			"config": &schema.Schema{
+			"config": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     schema.TypeString,
 				Default:  nil,
 			},
 
-			"api": &schema.Schema{
+			"api": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
