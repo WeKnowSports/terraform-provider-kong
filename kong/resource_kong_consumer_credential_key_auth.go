@@ -2,10 +2,8 @@ package kong
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -47,14 +45,10 @@ func resourceKongKeyAuthCredentialCreate(d *schema.ResourceData, meta interface{
 	sling := meta.(*sling.Sling)
 
 	keyAuthCredential := getKeyAuthCredentialFromResourceData(d)
-	log.Print("KEY AUTH")
-	log.Print(spew.Sdump(keyAuthCredential))
 
 	createdKeyAuthCredential := getKeyAuthCredentialFromResourceData(d)
 
 	response, error := sling.New().BodyJSON(keyAuthCredential).Path("consumers/").Path(keyAuthCredential.Consumer + "/").Post("key-auth/").ReceiveSuccess(createdKeyAuthCredential)
-	log.Print("KEY AUTH RESPONSE")
-	log.Print(spew.Sdump(response))
 	if error != nil {
 		return fmt.Errorf("Error while creating keyAuthCredential.")
 	}
