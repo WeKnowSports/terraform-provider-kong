@@ -3,24 +3,18 @@ package kong
 import (
 	"fmt"
 	"net/http"
-  "log"
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
-  "github.com/davecgh/go-spew/spew"
 )
 
-type KeyAuthConfig struct {
-  KeyNames        string  `json:"key_names,omitempty"`
-  HideCredentials bool    `json:"hide_credentials,omitempty"`
-  Anonymous       bool    `json:"anonymous,omitempty"`
-}
-
 type KeyAuthPlugin struct {
-	ID            string                 `json:"id,omitempty"`
-	Name          string                 `json:"name,omitempty"`
-	Configuration KeyAuthConfig `json:"config,omitempty"`
-	API           string                 `json:"-"`
+	ID               string                 `json:"id,omitempty"`
+	Name             string                 `json:"name,omitempty"`
+	KeyNames      	 string                 `json:"config.key_names,omitempty"`
+	HideCredentials  bool                   `json:"config.hide_credentials,omitempty"`
+	Anonymous        string                  `json:"config.anonymous,omitempty"`
+	API              string                 `json:"-"`
 }
 
 func resourceKongKeyAuthPlugin() *schema.Resource {
@@ -36,33 +30,26 @@ func resourceKongKeyAuthPlugin() *schema.Resource {
 				Computed: true,
 			},
 
-			"config": &schema.Schema{
-        Type: schema.TypeMap,
+      "key_names": &schema.Schema{
+        Type:   schema.TypeString,
         Required: true,
         Default: nil,
-        Elem: &schema.Resource{
-          Schema: map[string]*schema.Schema{
-            "key_names": &schema.Schema{
-              Type:   schema.TypeString,
-              Required: true,
-              Default: nil,
-              Description: "The name of the API key header to use.",
-            },
-            "hide_credentials": &schema.Schema{
-              Type: schema.TypeBool,
-              Optional: true,
-              Default: nil,
-              Description: "Whether credentials should be hidden.",
-            },
-            "anonymous": &schema.Schema{
-              Type: schema.TypeString,
-              Optional: true,
-              Default: nil,
-              Description: "String (consumer UUID) to use as an anonymous 'consumer', if authentication fails.",
-            },
-          },
-        },
-			},
+        Description: "The name of the API key header to use.",
+      },
+
+      "hide_credentials": &schema.Schema{
+        Type: schema.TypeBool,
+        Optional: true,
+        Default: nil,
+        Description: "Whether credentials should be hidden.",
+      },
+
+      "anonymous": &schema.Schema{
+        Type: schema.TypeString,
+        Optional: true,
+        Default: nil,
+        Description: "String (consumer UUID) to use as an anonymous 'consumer', if authentication fails.",
+      },
 
 			"api": &schema.Schema{
 				Type:     schema.TypeString,
@@ -80,10 +67,6 @@ func resourceKeyAuthPluginCreate(d *schema.ResourceData, meta interface{}) error
 	createdPlugin := getKeyAuthPluginFromResourceData(d)
 
 	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API + "/").Post("plugins/").ReceiveSuccess(createdPlugin)
-  pluginStr := spew.Sdump(createdPlugin)
-  str := spew.Sdump(response)
-  log.Print(pluginStr)
-  log.Print(str)
 	if error != nil {
 		return fmt.Errorf("Error while creating plugin.")
 	}
@@ -156,21 +139,12 @@ func resourceKeyAuthPluginDelete(d *schema.ResourceData, meta interface{}) error
 
 func getKeyAuthPluginFromResourceData(d *schema.ResourceData) *KeyAuthPlugin {
 	plugin := &KeyAuthPlugin{
-		Name:          "key-auth",
-		Configuration: d.Get("config").(KeyAuthConfig),
-		API:           d.Get("api").(string),
+		Name:            "key-auth",
+		KeyNames:        d.Get("key_names").(string),
+		HideCredentials: d.Get("hide_credentials").(bool),
+		Anonymous:       d.Get("anonymous").(string),
+		API:             d.Get("api").(string),
 	}
-
-  log.Print("GET KEY AUTH PLUGIN")
-  pluginStr := spew.Sdump(plugin)
-  log.Print(pluginStr)
-
-
-  // if config, ok := d.Get("config").(KeyAuthConfig); ok {
-  //   if config.HideCredentials != "" {
-  //     plugin.Configuration.HideCredentials = strconv.ParseBool(plugin.Configuration.HideCredentials)
-  //   }
-  // }
 
 	if id, ok := d.GetOk("id"); ok {
 		plugin.ID = id.(string)
@@ -181,7 +155,9 @@ func getKeyAuthPluginFromResourceData(d *schema.ResourceData) *KeyAuthPlugin {
 
 func setKeyAuthPluginFromResourceData(d *schema.ResourceData, plugin *KeyAuthPlugin) {
 	d.SetId(plugin.ID)
-	d.Set("name", "key-auth")
-	d.Set("config", plugin.Configuration)
+	d.Set("name", plugin.Name)
+	d.Set("key_names", plugin.KeyNames)
+	d.Set("hide_credentials", plugin.HideCredentials)
+	d.Set("anonymous", plugin.Anonymous)
 	d.Set("api", plugin.API)
 }
