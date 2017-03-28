@@ -13,7 +13,7 @@ type API struct {
 	Name                   string      `json:"name,omitempty"`
 	Hosts                  interface{} `json:"hosts,omitempty"`
 	URIs                   interface{} `json:"uris,omitempty"`
-	StripURI               bool        `json:"strip_uri,omitempty"`
+	StripURI               bool        `json:"strip_uri"`
 	PreserveHost           bool        `json:"preserve_host,omitempty"`
 	UpstreamURL            string      `json:"upstream_url,omitempty"`
 	Methods                interface{} `json:"methods,omitempty"`
@@ -64,7 +64,7 @@ func resourceKongAPI() *schema.Resource {
 			"strip_uri": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Default:     true,
 				Description: "Strip the request_path value before proxying the request to the final API. For example a request made to /someservice/hello will be resolved to upstream_url/hello. By default is false.",
 			},
 
