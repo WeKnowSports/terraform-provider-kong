@@ -36,7 +36,12 @@ resource "kong_api_plugin" "rate_limiting" {
     name = "rate-limiting"
 
     config {
-        minute = "100"
+        name = "minute"
+        value = "100"
+    }
+    config {
+        name = "policy"
+        value = "cluster"
     }
 }
 
