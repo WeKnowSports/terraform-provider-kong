@@ -25,40 +25,40 @@ func resourceKongJWTCredential() *schema.Resource {
 		Delete: resourceKongJWTCredentialDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"key": &schema.Schema{
+			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "TA unique string identifying the credential. If left out, it will be auto-generated.",
 			},
 
-			"algorithm": &schema.Schema{
+			"algorithm": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "The algorithm used to verify the token's signature. Can be HS256 or RS256.",
 			},
 
-			"rsa_public_key": &schema.Schema{
+			"rsa_public_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "If algorithm is RS256, the public key (in PEM format) to use to verify the token's signature.",
 			},
 
-			"secret": &schema.Schema{
+			"secret": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "If algorithm is HS256, the secret used to sign JWTs for this credential. If left out, will be auto-generated.",
 			},
 
-			"consumer": &schema.Schema{
+			"consumer": {
 				Type:     schema.TypeString,
 				Required: true,
 			},

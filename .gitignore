@@ -31,3 +31,7 @@ _testmain.go
 
 terraform-provider-kong
 .vscode/
+
+.DS_Store
+
+.idea

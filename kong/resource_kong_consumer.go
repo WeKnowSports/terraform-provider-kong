@@ -22,19 +22,19 @@ func resourceKongConsumer() *schema.Resource {
 		Delete: resourceKongConsumerDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"username": &schema.Schema{
+			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "The username of the consumer. You must send either this field or custom_id with the request.",
 			},
 
-			"custom_id": &schema.Schema{
+			"custom_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
