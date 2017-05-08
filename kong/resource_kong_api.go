@@ -3,13 +3,14 @@ package kong
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-// API : Kong API object structure
-type API struct {
+// APIRequest : Kong API request object structure
+type APIRequest struct {
 	ID                     string `json:"id,omitempty"`
 	Name                   string `json:"name"`
 	Hosts                  string `json:"hosts,omitempty"`
@@ -24,6 +25,24 @@ type API struct {
 	UpstreamReadTimeout    int    `json:"upstream_read_timeout,omitempty"`
 	HTTPSOnly              bool   `json:"https_only,omitempty"`
 	HTTPIfTerminated       bool   `json:"http_if_terminated,omitempty"`
+}
+
+// APIResponse : Kong API response object structure
+type APIResponse struct {
+	ID                     string   `json:"id,omitempty"`
+	Name                   string   `json:"name"`
+	Hosts                  []string `json:"hosts,omitempty"`
+	Uris                   []string `json:"uris,omitempty"`
+	Methods                []string `json:"methods,omitempty"`
+	UpstreamURL            string   `json:"upstream_url"`
+	StripURI               bool     `json:"strip_uri,omitempty"`
+	PreserveHost           bool     `json:"preserve_host,omitempty"`
+	Retries                int      `json:"retries,omitempty"`
+	UpstreamConnectTimeout int      `json:"upstream_connect_timeout,omitempty"`
+	UpstreamSendTimeout    int      `json:"upstream_send_timeout,omitempty"`
+	UpstreamReadTimeout    int      `json:"upstream_read_timeout,omitempty"`
+	HTTPSOnly              bool     `json:"https_only,omitempty"`
+	HTTPIfTerminated       bool     `json:"http_if_terminated,omitempty"`
 }
 
 func resourceKongAPI() *schema.Resource {
@@ -89,28 +108,28 @@ func resourceKongAPI() *schema.Resource {
 			"retries": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     nil,
+				Default:     5,
 				Description: "A comma-separated list of HTTP methods that point to your API. For example: GET,POST. At least one of hosts, uris, or methods should be specified.",
 			},
 
 			"upstream_connect_timeout": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     nil,
+				Default:     60000,
 				Description: "The timeout in milliseconds for establishing a connection to your upstream service. Defaults to 60000.",
 			},
 
 			"upstream_send_timeout": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     nil,
+				Default:     60000,
 				Description: "The timeout in milliseconds between two successive write operations for transmitting a request to your upstream service Defaults to 60000.",
 			},
 
 			"upstream_read_timeout": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     nil,
+				Default:     60000,
 				Description: "The timeout in milliseconds between two successive read operations for transmitting a request to your upstream service Defaults to 60000.",
 			},
 
@@ -124,7 +143,7 @@ func resourceKongAPI() *schema.Resource {
 			"http_if_terminated": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     nil,
+				Default:     true,
 				Description: "Consider the X-Forwarded-Proto header when enforcing HTTPS only traffic. Default: true.",
 			},
 		},
@@ -136,15 +155,16 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 
 	api := getAPIFromResourceData(d)
 
-	createdAPI := new(API)
+	createdAPI := new(APIResponse)
 
 	response, error := sling.New().BodyJSON(api).Post("apis/").ReceiveSuccess(createdAPI)
+
 	if error != nil {
-		return fmt.Errorf("error while creating API")
+		return fmt.Errorf("error while creating API: " + error.Error())
 	}
 
 	if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf(response.Status)
+		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
 	setAPIToResourceData(d, createdAPI)
@@ -156,11 +176,11 @@ func resourceKongAPIRead(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
 	id := d.Get("id").(string)
-	api := new(API)
+	api := new(APIResponse)
 
 	response, error := sling.New().Path("apis/").Get(id).ReceiveSuccess(api)
 	if error != nil {
-		return fmt.Errorf("error while updating API")
+		return fmt.Errorf("error while updating API" + error.Error())
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -177,11 +197,11 @@ func resourceKongAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	api := getAPIFromResourceData(d)
 
-	updatedAPI := new(API)
+	updatedAPI := new(APIResponse)
 
 	response, error := sling.New().BodyJSON(api).Patch("apis/").Path(api.ID).ReceiveSuccess(updatedAPI)
 	if error != nil {
-		return fmt.Errorf("error while updating API")
+		return fmt.Errorf("error while updating API" + error.Error())
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -200,7 +220,7 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Delete("apis/").Path(id).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("error while deleting API")
+		return fmt.Errorf("error while deleting API" + error.Error())
 	}
 
 	if response.StatusCode != http.StatusNoContent {
@@ -210,8 +230,8 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getAPIFromResourceData(d *schema.ResourceData) *API {
-	api := &API{
+func getAPIFromResourceData(d *schema.ResourceData) *APIRequest {
+	api := &APIRequest{
 		Name:                   d.Get("name").(string),
 		Hosts:                  d.Get("hosts").(string),
 		Uris:                   d.Get("uris").(string),
@@ -234,11 +254,11 @@ func getAPIFromResourceData(d *schema.ResourceData) *API {
 	return api
 }
 
-func setAPIToResourceData(d *schema.ResourceData, api *API) {
+func setAPIToResourceData(d *schema.ResourceData, api *APIResponse) {
 	d.SetId(api.ID)
 	d.Set("name", api.Name)
 	d.Set("hosts", api.Hosts)
-	d.Set("uris", api.Uris)
+	d.Set("uris", strings.Join(api.Uris, ","))
 	d.Set("methods", api.Methods)
 	d.Set("upstream_url", api.UpstreamURL)
 	d.Set("strip_uri", api.StripURI)
