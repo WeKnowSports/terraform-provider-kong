@@ -12,8 +12,8 @@ provider "kong" {
 resource "kong_api" "api" {
     name               = "api"
     upstream_url       = "http://api.local"
-    request_path       = "/api"
-    strip_request_path = true
+    uris       = "/api"
+    strip_uris = false
 }
 
 resource "kong_consumer" "consumer" {
