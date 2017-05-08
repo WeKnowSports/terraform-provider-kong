@@ -184,7 +184,7 @@ func resourceKongAPIRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf(response.Status)
+		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
 	setAPIToResourceData(d, api)
@@ -205,7 +205,7 @@ func resourceKongAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf(response.Status)
+		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
 	setAPIToResourceData(d, updatedAPI)
@@ -224,7 +224,7 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf(response.Status)
+		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
 	return nil
