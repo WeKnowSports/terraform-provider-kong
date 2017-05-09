@@ -17,14 +17,14 @@ type APIRequest struct {
 	Uris                   string `json:"uris,omitempty"`
 	Methods                string `json:"methods,omitempty"`
 	UpstreamURL            string `json:"upstream_url"`
-	StripURI               bool   `json:"strip_uri,omitempty"`
-	PreserveHost           bool   `json:"preserve_host,omitempty"`
+	StripURI               bool   `json:"strip_uri"`
+	PreserveHost           bool   `json:"preserve_host"`
 	Retries                int    `json:"retries,omitempty"`
 	UpstreamConnectTimeout int    `json:"upstream_connect_timeout,omitempty"`
 	UpstreamSendTimeout    int    `json:"upstream_send_timeout,omitempty"`
 	UpstreamReadTimeout    int    `json:"upstream_read_timeout,omitempty"`
-	HTTPSOnly              bool   `json:"https_only,omitempty"`
-	HTTPIfTerminated       bool   `json:"http_if_terminated,omitempty"`
+	HTTPSOnly              bool   `json:"https_only"`
+	HTTPIfTerminated       bool   `json:"http_if_terminated"`
 }
 
 // APIResponse : Kong API response object structure
@@ -35,14 +35,14 @@ type APIResponse struct {
 	Uris                   []string `json:"uris,omitempty"`
 	Methods                []string `json:"methods,omitempty"`
 	UpstreamURL            string   `json:"upstream_url"`
-	StripURI               bool     `json:"strip_uri,omitempty"`
-	PreserveHost           bool     `json:"preserve_host,omitempty"`
+	StripURI               bool     `json:"strip_uri"`
+	PreserveHost           bool     `json:"preserve_host"`
 	Retries                int      `json:"retries,omitempty"`
 	UpstreamConnectTimeout int      `json:"upstream_connect_timeout,omitempty"`
 	UpstreamSendTimeout    int      `json:"upstream_send_timeout,omitempty"`
 	UpstreamReadTimeout    int      `json:"upstream_read_timeout,omitempty"`
-	HTTPSOnly              bool     `json:"https_only,omitempty"`
-	HTTPIfTerminated       bool     `json:"http_if_terminated,omitempty"`
+	HTTPSOnly              bool     `json:"https_only"`
+	HTTPIfTerminated       bool     `json:"http_if_terminated"`
 }
 
 func resourceKongAPI() *schema.Resource {
@@ -179,6 +179,7 @@ func resourceKongAPIRead(d *schema.ResourceData, meta interface{}) error {
 	api := new(APIResponse)
 
 	response, error := sling.New().Path("apis/").Get(id).ReceiveSuccess(api)
+
 	if error != nil {
 		return fmt.Errorf("error while updating API" + error.Error())
 	}
@@ -200,6 +201,7 @@ func resourceKongAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	updatedAPI := new(APIResponse)
 
 	response, error := sling.New().BodyJSON(api).Patch("apis/").Path(api.ID).ReceiveSuccess(updatedAPI)
+
 	if error != nil {
 		return fmt.Errorf("error while updating API" + error.Error())
 	}
