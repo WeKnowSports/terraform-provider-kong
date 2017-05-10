@@ -66,6 +66,8 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf(response.Status)
 	}
 
+    createdPlugin.Configuration = plugin.Configuration
+
 	setPluginToResourceData(d, createdPlugin)
 
 	return nil
@@ -76,6 +78,11 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	plugin := getPluginFromResourceData(d)
 
+    configuration := make(map[string]interface{})
+    for key, value := range plugin.Configuration {
+        configuration[key] = value
+    }
+
 	response, error := sling.New().Path("apis/").Path(plugin.API + "/").Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
 	if error != nil {
 		return fmt.Errorf("Error while updating plugin.")
@@ -84,6 +91,8 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf(response.Status)
 	}
+
+    plugin.Configuration = configuration
 
 	setPluginToResourceData(d, plugin)
 
@@ -105,6 +114,8 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf(response.Status)
 	}
+
+    updatedPlugin.Configuration = plugin.Configuration
 
 	setPluginToResourceData(d, updatedPlugin)
 
