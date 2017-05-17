@@ -14,7 +14,7 @@ type API struct {
 	Hosts                  interface{} `json:"hosts,omitempty"`
 	URIs                   interface{} `json:"uris,omitempty"`
 	StripURI               bool        `json:"strip_uri"`
-	PreserveHost           bool        `json:"preserve_host,omitempty"`
+	PreserveHost           bool        `json:"preserve_host"`
 	UpstreamURL            string      `json:"upstream_url,omitempty"`
 	Methods                interface{} `json:"methods,omitempty"`
 	Retries                int         `json:"retries,omitempty"`
