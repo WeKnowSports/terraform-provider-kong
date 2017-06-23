@@ -32,6 +32,8 @@ func Provider() terraform.ResourceProvider {
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	config := Config{
 		Address: d.Get("address").(string),
+		User: d.Get("user").(string),
+		Password: d.Get("password").(string),
 	}
 
 	return config.Client()
