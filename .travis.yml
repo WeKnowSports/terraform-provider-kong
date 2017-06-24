@@ -1,0 +1,18 @@
+language: go
+go:
+  - 1.8.x
+services:
+  - docker
+notifications:
+  slack: localz:e4NXRsK6xKt24S3ddRBNNOVY
+before_install:
+  - curl -L https://releases.hashicorp.com/terraform/0.9.6/terraform_0.9.6_linux_amd64.zip > terraform.zip && unzip terraform.zip -d terraform && export PATH=$PATH:$PWD/terraform && echo $(terraform --version)
+  - curl -L https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz > go.tar.gz && tar -xzf go.tar.gz && export PATH=$PWD/go/bin:$PATH && echo $(go version)
+install:
+  - go build -o tests/terraform-provider-kong
+  - export GOPATH=$HOME/gocode
+  - export PATH=$PATH:$GOPATH/bin
+script:
+  - cd tests
+  - terraform plan
+  - terraform apply
