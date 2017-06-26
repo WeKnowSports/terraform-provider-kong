@@ -2,14 +2,15 @@
 TF_LOG='DEBUG'
 echo ${1}
 
-export GOPATH=$HOME/gocode
-mkdir -p $GOPATH/github.com/localz/terraform-provider-kong
-cp -R $PWD $GOPATH/src/github.com/localz/terraform-provider-kong/
+export GOPATH=$HOME/go
+mkdir -p $GOPATH/src/github.com/localz/terraform-provider-kong
+cp -R ./ $GOPATH/src/github.com/localz/terraform-provider-kong/
+ls
 
-go build -o terraform/tests/terraform-provider-kong
-cd terraform/tests
-terraform ${1}
+go build -o terraform/${1}/terraform-provider-kong
+cd terraform/${1}
+terraform ${2}
 cd ../..
 
-rm -fr $GOPATH/github.com/localz/terraform-provider-kong
-rm -f ./terraform/tests/terraform-provider-kong
+rm -fr $GOPATH/src/github.com/localz/terraform-provider-kong
+rm -f ./terraform/init/terraform-provider-kong
