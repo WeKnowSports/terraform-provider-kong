@@ -6,18 +6,10 @@ import (
 
 type Config struct {
 	Address string
-	User string
+	Username string
 	Password string
 }
 
 func (c *Config) Client() (*sling.Sling, error) {
-
-	var s sling
-	s = sling.new()
-
-	if (c.User != null && c.Password != null){
-		s.SetBasicAuth(c.User, c.Password)
-	}
-
-	return s.Base(c.Address), nil
+	return sling.New().SetBasicAuth(c.Username, c.Password).Base(c.Address), nil
 }
