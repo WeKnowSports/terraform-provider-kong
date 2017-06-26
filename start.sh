@@ -4,7 +4,7 @@ echo ${1}
 
 export GOPATH=$HOME/gocode
 mkdir -p $GOPATH/github.com/localz/terraform-provider-kong
-cp -R $(PWD)|$TRAVIS_BUILD_DIR $GOPATH/src/github.com/localz/terraform-provider-kong/
+cp -R $PWD $GOPATH/src/github.com/localz/terraform-provider-kong/
 
 go build -o terraform/tests/terraform-provider-kong
 cd terraform/tests
