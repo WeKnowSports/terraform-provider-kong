@@ -13,6 +13,8 @@ install:
   - go get github.com/hashicorp/terraform/helper/schema
   - go get github.com/hashicorp/terraform/terraform
   - go get github.com/hashicorp/terraform/plugin
-  - ./init.sh apply
 script:
+  - docker-compose up -d
+  - sleep 1m
+  - ./init.sh apply
   - ./start.sh apply
