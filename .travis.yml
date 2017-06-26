@@ -8,12 +8,17 @@ before_install:
   - curl -L https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz > go.tar.gz && tar -xzf go.tar.gz && export PATH=$PWD/go/bin:$PATH && echo $(go version)
   - export GOPATH=$HOME/gocode
   - export PATH=$PATH:$GOPATH/bin
+  - DOCKER_COMPOSE_VERSION="1.7.1"
 install:
   - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
   - go get github.com/dghubble/sling
   - go get github.com/hashicorp/terraform/helper/schema
   - go get github.com/hashicorp/terraform/terraform
   - go get github.com/hashicorp/terraform/plugin
+  - echo "Installing docker and docker compose"
+  - sudo apt-get update -y && sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine jq curl
+  - sudo rm /usr/local/bin/docker-compose && curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose && sudo mv docker-compose /usr/local/bin && export PATH=$PATH:$HOME/.local/bin
 script:
   - docker-compose up &
   - sleep 1m
