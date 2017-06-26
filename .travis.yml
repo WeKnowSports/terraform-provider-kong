@@ -11,7 +11,7 @@ before_install:
   - export PATH=$PATH:$GOPATH/bin
   - DOCKER_COMPOSE_VERSION="1.7.1"
   - echo "Installing docker and docker compose"
-  - sudo apt-get update -y && sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine jq curl
+  - sudo apt-get update -y && sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-ce jq curl
   - sudo rm /usr/local/bin/docker-compose && curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose && sudo mv docker-compose /usr/local/bin && export PATH=$PATH:$HOME/.local/bin
   - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
