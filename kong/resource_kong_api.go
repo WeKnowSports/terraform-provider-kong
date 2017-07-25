@@ -156,7 +156,6 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	api := getAPIFromResourceData(d)
 
 	createdAPI := new(APIResponse)
-
 	response, error := sling.New().BodyJSON(api).Post("apis/").ReceiveSuccess(createdAPI)
 
 	if error != nil {
