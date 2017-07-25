@@ -178,6 +178,7 @@ func resourceKongAPIRead(d *schema.ResourceData, meta interface{}) error {
 	api := new(APIResponse)
 
 	response, error := sling.New().Path("apis/").Get(id).ReceiveSuccess(api)
+
 	if error != nil {
 		return fmt.Errorf("error while updating API" + error.Error())
 	}
@@ -199,6 +200,7 @@ func resourceKongAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	updatedAPI := new(APIResponse)
 
 	response, error := sling.New().BodyJSON(api).Patch("apis/").Path(api.ID).ReceiveSuccess(updatedAPI)
+
 	if error != nil {
 		return fmt.Errorf("error while updating API" + error.Error())
 	}

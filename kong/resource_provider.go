@@ -20,6 +20,7 @@ func Provider() terraform.ResourceProvider {
 			"kong_consumer":                       resourceKongConsumer(),
 			"kong_api_plugin":                     resourceKongPlugin(),
 			"kong_consumer_basic_auth_credential": resourceKongBasicAuthCredential(),
+			"kong_consumer_key_auth_credential":   resourceKongKeyAuthCredential(),
 			"kong_consumer_jwt_credential":        resourceKongJWTCredential(),
 		},
 
