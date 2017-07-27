@@ -12,8 +12,9 @@ provider "kong" {
 resource "kong_api" "api" {
     name               = "api"
     upstream_url       = "http://api.local"
-    request_path       = "/api"
-    strip_request_path = true
+    hosts = "api.domain.com"
+    uris       = "/api"
+    strip_uri = false
 }
 
 resource "kong_consumer" "consumer" {
@@ -44,6 +45,11 @@ resource "kong_consumer_basic_auth_credential" "basic_auth_credential" {
     consumer = "${kong_consumer.consumer.id}"
     username = "user123"
     password = "password"
+}
+
+resource "kong_consumer_key_auth_credential" "key_auth_credential" {
+    consumer = "${kong_consumer.consumer.id}"
+    key = "key"
 }
 
 resource "kong_consumer_jwt_credential" "jwt_credential" {
