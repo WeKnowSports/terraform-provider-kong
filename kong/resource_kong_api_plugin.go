@@ -67,6 +67,8 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
+    createdPlugin.Configuration = plugin.Configuration
+
 	setPluginToResourceData(d, createdPlugin)
 
 	return nil
@@ -77,6 +79,11 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	plugin := getPluginFromResourceData(d)
 
+    configuration := make(map[string]interface{})
+    for key, value := range plugin.Configuration {
+        configuration[key] = value
+    }
+
 	response, error := sling.New().Path("apis/").Path(plugin.API + "/").Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
 	if error != nil {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
@@ -85,6 +92,8 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
+
+    plugin.Configuration = configuration
 
 	setPluginToResourceData(d, plugin)
 
@@ -106,6 +115,8 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
+
+    updatedPlugin.Configuration = plugin.Configuration
 
 	setPluginToResourceData(d, updatedPlugin)
 
