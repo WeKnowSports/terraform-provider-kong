@@ -11,5 +11,8 @@ cd terraform/${1}
 terraform ${2}
 cd ../..
 
+mkdir dist
+cp terraform/${1}/terraform-provider-kong ./dist/terraform-provider-kong
+
 rm -fr $GOPATH/src/github.com/localz/terraform-provider-kong
 rm -f ./terraform/init/terraform-provider-kong

@@ -25,3 +25,14 @@ script:
   - sleep 1m
   - ./start.sh init apply
   - ./start.sh tests apply
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: echo "stubbed deploy"
+    on:
+      branch: develop
+  - provider: script
+    skip_cleanup: true
+    script: echo "stubbed deploy"
+    on:
+      branch: master
