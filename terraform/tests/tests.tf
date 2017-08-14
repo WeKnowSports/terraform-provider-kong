@@ -4,11 +4,11 @@
 resource "kong_api" "api" {
   name               = "test"
   upstream_url       = "http://requestb.in"
-  hosts              = []
-  methods            = []
-  uris               = ["/localz", "/test"]
+  hosts              = ""
+  methods            = ""
+  uris               = "/localz,/test"
   strip_uri          = true
-  methods            = ["GET"]
+  methods            = "GET"
 }
 
 /**
