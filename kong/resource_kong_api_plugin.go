@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+// Plugin : Kong API plugin request object structure
 type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
@@ -59,12 +60,14 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API + "/").Post("plugins/").ReceiveSuccess(createdPlugin)
 	if error != nil {
-		return fmt.Errorf("Error while creating plugin.")
+		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
 
 	if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf(response.Status)
+		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
+
+    createdPlugin.Configuration = plugin.Configuration
 
 	setPluginToResourceData(d, createdPlugin)
 
@@ -76,14 +79,21 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	plugin := getPluginFromResourceData(d)
 
+    configuration := make(map[string]interface{})
+    for key, value := range plugin.Configuration {
+        configuration[key] = value
+    }
+
 	response, error := sling.New().Path("apis/").Path(plugin.API + "/").Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
 	if error != nil {
-		return fmt.Errorf("Error while updating plugin.")
+		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf(response.Status)
+		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
+
+    plugin.Configuration = configuration
 
 	setPluginToResourceData(d, plugin)
 
@@ -99,12 +109,14 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API + "/").Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
 	if error != nil {
-		return fmt.Errorf("Error while updating plugin.")
+		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf(response.Status)
+		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
+
+    updatedPlugin.Configuration = plugin.Configuration
 
 	setPluginToResourceData(d, updatedPlugin)
 
@@ -118,11 +130,11 @@ func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Path("apis/").Path(plugin.API + "/").Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting plugin.")
+		return fmt.Errorf("error while deleting plugin: " + error.Error())
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf(response.Status)
+		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
 	return nil
