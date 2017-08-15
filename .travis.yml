@@ -4,9 +4,8 @@ services:
   - docker
 go:
   - 1.8.x
-go_import_path: /home/travis/go/src/github.com/localz/terraform-provider-kong
+go_import_path: $gopath/github.com/localz/terraform-provider-kong
 before_install:
-  - export GOPATH=/home/travis/go/src
   - curl -L https://releases.hashicorp.com/terraform/0.9.11/terraform_0.9.11_linux_amd64.zip > terraform.zip && unzip terraform.zip -d terraform && export PATH=$PATH:$PWD/terraform && echo $(terraform --version)
   - DOCKER_COMPOSE_VERSION="1.7.1"
   - echo "Installing docker and docker compose"
@@ -15,8 +14,6 @@ before_install:
   - chmod +x docker-compose && sudo mv docker-compose /usr/local/bin && export PATH=$PATH:$HOME/.local/bin
   - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 install:
-  - echo $GOPATH
-  -
   - echo $GOPATH
   - go get github.com/dghubble/sling
   - go get github.com/hashicorp/terraform/helper/schema
