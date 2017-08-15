@@ -4,7 +4,6 @@ services:
   - docker
 go:
   - 1.8.x
-go_import_path: github.com/localz
 before_install:
   - curl -L https://releases.hashicorp.com/terraform/0.9.11/terraform_0.9.11_linux_amd64.zip > terraform.zip && unzip terraform.zip -d terraform && export PATH=$PATH:$PWD/terraform && echo $(terraform --version)
   - curl -L https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz > go.tar.gz && tar -xzf go.tar.gz && export PATH=$PWD/go/bin:$PATH && echo $(go version)
@@ -21,7 +20,6 @@ install:
   - go get github.com/hashicorp/terraform/helper/schema
   - go get github.com/hashicorp/terraform/terraform
   - go get github.com/hashicorp/terraform/plugin
-  - go get net/http
 script:
   - docker-compose up &
   - sleep 1m
