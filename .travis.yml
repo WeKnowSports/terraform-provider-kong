@@ -23,7 +23,7 @@ install:
   - echo $(pwd)
 script:
   - docker-compose up &
-  - sleep 2m
+  - sleep 1m
   - ./start.sh init apply
   - ./start.sh tests apply
 #deploy:
