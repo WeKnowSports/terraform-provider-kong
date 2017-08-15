@@ -4,7 +4,7 @@ services:
   - docker
 go:
   - 1.8.x
-go_import_path: github.com/localz/terraform-provider-kong
+go_import_path: $gopath/github.com/localz/terraform-provider-kong
 before_install:
   - curl -L https://releases.hashicorp.com/terraform/0.9.11/terraform_0.9.11_linux_amd64.zip > terraform.zip && unzip terraform.zip -d terraform && export PATH=$PATH:$PWD/terraform && echo $(terraform --version)
   - DOCKER_COMPOSE_VERSION="1.7.1"
@@ -19,6 +19,7 @@ install:
   - go get github.com/hashicorp/terraform/terraform
   - go get github.com/hashicorp/terraform/plugin
   - echo $(pwd)
+  - echo $gopath
 script:
   - docker-compose up &
   - sleep 1m
