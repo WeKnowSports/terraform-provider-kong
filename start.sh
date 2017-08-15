@@ -12,4 +12,4 @@ terraform ${2}
 cd ../..
 
 rm -fr $GOPATH/src/github.com/localz/terraform-provider-kong
-#rm -f ./terraform/${1}/terraform-provider-kong
+rm -f ./terraform/${1}/terraform-provider-kong

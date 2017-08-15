@@ -5,7 +5,7 @@ services:
 go:
   - 1.8.x
 before_install:
-  - curl -L https://releases.hashicorp.com/terraform/0.9.6/terraform_0.9.6_linux_amd64.zip > terraform.zip && unzip terraform.zip -d terraform && export PATH=$PATH:$PWD/terraform && echo $(terraform --version)
+  - curl -L https://releases.hashicorp.com/terraform/0.9.11/terraform_0.9.11_linux_amd64.zip > terraform.zip && unzip terraform.zip -d terraform && export PATH=$PATH:$PWD/terraform && echo $(terraform --version)
   - curl -L https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz > go.tar.gz && tar -xzf go.tar.gz && export PATH=$PWD/go/bin:$PATH && echo $(go version)
   - export GOPATH=$HOME/go
   - export PATH=$PATH:$GOPATH/bin
