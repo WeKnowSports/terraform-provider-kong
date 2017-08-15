@@ -14,12 +14,14 @@ before_install:
   - chmod +x docker-compose && sudo mv docker-compose /usr/local/bin && export PATH=$PATH:$HOME/.local/bin
   - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 install:
+  - echo $GOPATH
+  - export $GOPATH=/home/travis/gopath
+  - echo $GOPATH
   - go get github.com/dghubble/sling
   - go get github.com/hashicorp/terraform/helper/schema
   - go get github.com/hashicorp/terraform/terraform
   - go get github.com/hashicorp/terraform/plugin
   - echo $(pwd)
-  - echo $gopath
 script:
   - docker-compose up &
   - sleep 1m
