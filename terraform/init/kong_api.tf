@@ -1,7 +1,7 @@
 resource "kong_api" "admin" {
   name               = "kong-admin"
   upstream_url       = "http://localhost:8001"
-  hosts              = "localhost"
+  hosts              = "localhost, 127.0.0.1"
   strip_uri          = true
   retries            = 5
   preserve_host      = true
