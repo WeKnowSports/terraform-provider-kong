@@ -29,7 +29,8 @@ func resourceKongKeyAuthCredential() *schema.Resource {
 
 			"key": &schema.Schema{
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
+				Default:     nil,
 				Description: "The key to use in the Key Authentication.",
 			},
 
@@ -121,7 +122,7 @@ func resourceKongKeyAuthCredentialDelete(d *schema.ResourceData, meta interface{
 
 func getKeyAuthCredentialFromResourceData(d *schema.ResourceData) *KeyAuthCredential {
 	keyAuthCredential := &KeyAuthCredential{
-		Key:      d.Get("key").(string),
+		Key: d.Get("key").(string),
 		Consumer: d.Get("consumer").(string),
 	}
 
