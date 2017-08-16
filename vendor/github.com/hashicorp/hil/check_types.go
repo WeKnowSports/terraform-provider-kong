@@ -414,7 +414,7 @@ func (tc *typeCheckConditional) TypeCheck(v *TypeCheck) (ast.Node, error) {
 	}
 
 	// The types of the true and false expression must match
-	if trueType != falseType && trueType != ast.TypeUnknown && falseType != ast.TypeUnknown {
+	if trueType != falseType {
 
 		// Since passing around stringified versions of other types is
 		// common, we pragmatically allow the false expression to dictate
@@ -460,13 +460,7 @@ func (tc *typeCheckConditional) TypeCheck(v *TypeCheck) (ast.Node, error) {
 	}
 
 	// Result type (guaranteed to also match falseType due to the above)
-	if trueType == ast.TypeUnknown {
-		// falseType may also be unknown, but that's okay because two
-		// unknowns means our result is unknown anyway.
-		v.StackPush(falseType)
-	} else {
-		v.StackPush(trueType)
-	}
+	v.StackPush(trueType)
 
 	return tc.n, nil
 }
