@@ -9,23 +9,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-<<<<<<< HEAD
-type API struct {
-	ID                     string      `json:"id,omitempty"`
-	Name                   string      `json:"name,omitempty"`
-	Hosts                  interface{} `json:"hosts,omitempty"`
-	URIs                   interface{} `json:"uris,omitempty"`
-	StripURI               bool        `json:"strip_uri"`
-	PreserveHost           bool        `json:"preserve_host"`
-	UpstreamURL            string      `json:"upstream_url,omitempty"`
-	Methods                interface{} `json:"methods,omitempty"`
-	Retries                int         `json:"retries,omitempty"`
-	HTTPSOnly              bool        `json:"https_only,omitempty"`
-	HTTPIfTerminated       bool        `json:"http_if_terminated,omitempty"`
-	UpstreamConnectTimeout int         `json:"upstream_connect_timeout,omitempty"`
-	UpstreamSendTimeout    int         `json:"upstream_send_timeout,omitempty"`
-	UpstreamReadTimeout    int         `json:"upstream_read_timeout,omitempty"`
-=======
 // APIRequest : Kong API request object structure
 type APIRequest struct {
 	ID                     string `json:"id,omitempty"`
@@ -60,7 +43,6 @@ type APIResponse struct {
 	UpstreamReadTimeout    int      `json:"upstream_read_timeout,omitempty"`
 	HTTPSOnly              bool     `json:"https_only"`
 	HTTPIfTerminated       bool     `json:"http_if_terminated"`
->>>>>>> develop
 }
 
 func resourceKongAPI() *schema.Resource {
