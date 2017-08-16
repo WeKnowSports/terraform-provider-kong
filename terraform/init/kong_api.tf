@@ -10,7 +10,7 @@ resource "kong_api" "admin" {
 }
 
 resource "kong_consumer" "admin" {
-  username  = "localz"
+  username  = "username"
 }
 
 resource "kong_api_plugin" "admin_basic_auth" {
@@ -20,7 +20,7 @@ resource "kong_api_plugin" "admin_basic_auth" {
 
 resource "kong_consumer_basic_auth_credential" "basic_auth_credential" {
   consumer = "${kong_consumer.admin.id}"
-  username = "localz"
+  username = "username"
   password = "password"
 }
 
