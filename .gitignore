@@ -33,3 +33,4 @@ terraform-provider-kong
 .vscode/
 
 .idea
+dist/
