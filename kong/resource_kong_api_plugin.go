@@ -12,8 +12,13 @@ import (
 type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
+	ConsumerID    string                 `json:"consumer_id,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
 	API           string                 `json:"-"`
+}
+
+type KongAPIError struct {
+	Message string `json:"message"`
 }
 
 func resourceKongPlugin() *schema.Resource {
@@ -27,6 +32,13 @@ func resourceKongPlugin() *schema.Resource {
 			"id": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"consumer_id": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
+				Description: "The consumer_id of the plugin to use.",
 			},
 
 			"name": &schema.Schema{
@@ -55,19 +67,19 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
 	plugin := getPluginFromResourceData(d)
-
 	createdPlugin := getPluginFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API + "/").Post("plugins/").ReceiveSuccess(createdPlugin)
+	apiError := new(KongAPIError)
+	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API+"/").Post("plugins/").Receive(createdPlugin, apiError)
 	if error != nil {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
 
 	if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return fmt.Errorf(response.Status + " - " + apiError.Message)
 	}
 
-    createdPlugin.Configuration = plugin.Configuration
+	createdPlugin.Configuration = plugin.Configuration
 
 	setPluginToResourceData(d, createdPlugin)
 
@@ -79,21 +91,22 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	plugin := getPluginFromResourceData(d)
 
-    configuration := make(map[string]interface{})
-    for key, value := range plugin.Configuration {
-        configuration[key] = value
-    }
+	configuration := make(map[string]interface{})
+	for key, value := range plugin.Configuration {
+		configuration[key] = value
+	}
 
+	apiError := new(KongAPIError)
 	response, error := sling.New().Path("apis/").Path(plugin.API + "/").Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
 	if error != nil {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return fmt.Errorf(response.Status + " - " + apiError.Message)
 	}
 
-    plugin.Configuration = configuration
+	plugin.Configuration = configuration
 
 	setPluginToResourceData(d, plugin)
 
@@ -106,17 +119,21 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	plugin := getPluginFromResourceData(d)
 
 	updatedPlugin := getPluginFromResourceData(d)
-
-	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API + "/").Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
+	apiError := new(KongAPIError)
+	// Disable saving state until we've confirmed there were no errors updating the plugin.
+	d.Partial(true)
+	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API+"/").Path("plugins/").Patch(plugin.ID).Receive(updatedPlugin, apiError)
 	if error != nil {
-		return fmt.Errorf("error while updating plugin: " + error.Error())
+		return fmt.Errorf("error while updating plugin: " + error.Error() + plugin.ConsumerID + plugin.ID)
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return fmt.Errorf(response.Status + " - " + apiError.Message)
 	}
 
-    updatedPlugin.Configuration = plugin.Configuration
+	// We can re-enable saving state.
+	d.Partial(false)
+	updatedPlugin.Configuration = plugin.Configuration
 
 	setPluginToResourceData(d, updatedPlugin)
 
@@ -127,14 +144,14 @@ func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
 	plugin := getPluginFromResourceData(d)
-
-	response, error := sling.New().Path("apis/").Path(plugin.API + "/").Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
+	apiError := new(KongAPIError)
+	response, error := sling.New().Path("apis/").Path(plugin.API+"/").Path("plugins/").Delete(plugin.ID).Receive(nil, apiError)
 	if error != nil {
 		return fmt.Errorf("error while deleting plugin: " + error.Error())
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return fmt.Errorf(response.Status + " - " + apiError.Message)
 	}
 
 	return nil
@@ -151,6 +168,10 @@ func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
 		plugin.ID = id.(string)
 	}
 
+	if consumer_id, ok := d.GetOk("consumer_id"); ok {
+		plugin.ConsumerID = consumer_id.(string)
+	}
+
 	return plugin
 }
 
@@ -158,5 +179,6 @@ func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
 	d.SetId(plugin.ID)
 	d.Set("name", plugin.Name)
 	d.Set("config", plugin.Configuration)
+	d.Set("consumer_id", plugin.ConsumerID)
 	d.Set("api", plugin.API)
 }
