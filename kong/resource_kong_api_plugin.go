@@ -12,7 +12,7 @@ import (
 type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
-	ConsumerID    string                 `json:"consumer_id,omitempty"`
+	Consumer      string                 `json:"consumer_id,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
 	API           string                 `json:"-"`
 }
@@ -38,7 +38,7 @@ func resourceKongPlugin() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
-				Description: "The consumer_id of the plugin to use.",
+				Description: "The consumer_id to limit this plugin's scope to.",
 			},
 
 			"name": &schema.Schema{
@@ -63,6 +63,7 @@ func resourceKongPlugin() *schema.Resource {
 	}
 }
 
+// Maps to POST /api/{api_id}/plugins
 func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
@@ -86,6 +87,7 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+// Maps to GET /api/{api_id}/plugins
 func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
@@ -113,6 +115,7 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+// Maps to PATCH /api/{api_id}/plugins/{plugin_id}
 func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
@@ -124,7 +127,7 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	d.Partial(true)
 	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API+"/").Path("plugins/").Patch(plugin.ID).Receive(updatedPlugin, apiError)
 	if error != nil {
-		return fmt.Errorf("error while updating plugin: " + error.Error() + plugin.ConsumerID + plugin.ID)
+		return fmt.Errorf("error while updating plugin: " + error.Error() + plugin.Consumer + plugin.ID)
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -140,6 +143,7 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+// Maps to DELETE /api/{api_id}/plugins/{plugin_id}
 func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
@@ -162,14 +166,11 @@ func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
 		Name:          d.Get("name").(string),
 		Configuration: d.Get("config").(map[string]interface{}),
 		API:           d.Get("api").(string),
+    Consumer:      d.Get("consumer_id").(string),
 	}
 
 	if id, ok := d.GetOk("id"); ok {
 		plugin.ID = id.(string)
-	}
-
-	if consumer_id, ok := d.GetOk("consumer_id"); ok {
-		plugin.ConsumerID = consumer_id.(string)
 	}
 
 	return plugin
@@ -179,6 +180,6 @@ func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
 	d.SetId(plugin.ID)
 	d.Set("name", plugin.Name)
 	d.Set("config", plugin.Configuration)
-	d.Set("consumer_id", plugin.ConsumerID)
+	d.Set("consumer_id", plugin.Consumer)
 	d.Set("api", plugin.API)
 }
