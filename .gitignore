@@ -31,3 +31,6 @@ _testmain.go
 
 terraform-provider-kong
 .vscode/
+
+.idea
+dist/
