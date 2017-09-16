@@ -76,7 +76,10 @@ func resourceKongConsumerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error while updating consumer.")
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	} else if response.StatusCode != http.StatusOK {
 		return fmt.Errorf(response.Status)
 	}
 
