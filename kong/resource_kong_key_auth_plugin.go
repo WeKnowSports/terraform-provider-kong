@@ -14,7 +14,7 @@ type KeyAuthPlugin struct {
 	KeyNames      	 string                 `json:"config.key_names,omitempty"`
 	HideCredentials  bool                   `json:"config.hide_credentials,omitempty"`
 	Anonymous        string                  `json:"config.anonymous,omitempty"`
-	API              string                 `json:"-"`
+	API              string                 `json:"api_id,omitempty"`
 }
 
 func resourceKongKeyAuthPlugin() *schema.Resource {

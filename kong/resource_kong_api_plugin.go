@@ -13,7 +13,7 @@ type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
-	API           string                 `json:"-"`
+	API           string                 `json:"api_id,omitempty"`
 }
 
 func resourceKongPlugin() *schema.Resource {
