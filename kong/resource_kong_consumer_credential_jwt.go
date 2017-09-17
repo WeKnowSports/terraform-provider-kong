@@ -24,6 +24,10 @@ func resourceKongJWTCredential() *schema.Resource {
 		Update: resourceKongJWTCredentialUpdate,
 		Delete: resourceKongJWTCredentialDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"id": &schema.Schema{
 				Type:     schema.TypeString,
