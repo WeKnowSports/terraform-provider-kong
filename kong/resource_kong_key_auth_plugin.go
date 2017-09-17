@@ -57,7 +57,8 @@ func resourceKongKeyAuthPlugin() *schema.Resource {
 
 			"api": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  nil,
 			},
 		},
 	}
@@ -70,7 +71,11 @@ func resourceKeyAuthPluginCreate(d *schema.ResourceData, meta interface{}) error
 
 	createdPlugin := getKeyAuthPluginFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API + "/").Post("plugins/").ReceiveSuccess(createdPlugin)
+	request := sling.New().BodyJSON(plugin)
+	if plugin.API != "" {
+		request = request.Path("apis/").Path(plugin.API + "/")
+	}
+	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
 	if error != nil {
 		return fmt.Errorf("Error while creating plugin.")
 	}
@@ -91,7 +96,7 @@ func resourceKeyAuthPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	plugin := getKeyAuthPluginFromResourceData(d)
 
-	response, error := sling.New().Path("apis/").Path(plugin.API + "/").Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
+	response, error := sling.New().Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
 	if error != nil {
 		return fmt.Errorf("Error while updating plugin.")
 	}
@@ -115,7 +120,7 @@ func resourceKeyAuthPluginUpdate(d *schema.ResourceData, meta interface{}) error
 
 	updatedPlugin := getKeyAuthPluginFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API + "/").Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
+	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
 	if error != nil {
 		return fmt.Errorf("Error while updating plugin.")
 	}
@@ -134,7 +139,7 @@ func resourceKeyAuthPluginDelete(d *schema.ResourceData, meta interface{}) error
 
 	plugin := getKeyAuthPluginFromResourceData(d)
 
-	response, error := sling.New().Path("apis/").Path(plugin.API + "/").Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
+	response, error := sling.New().Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
 	if error != nil {
 		return fmt.Errorf("Error while deleting plugin.")
 	}
