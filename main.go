@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hashicorp/terraform/plugin"
-	"github.com/WeKnowSports/terraform-provider-kong/kong"
+	"github.com/rapid7/terraform-provider-kong/kong"
 )
 
 func main() {
