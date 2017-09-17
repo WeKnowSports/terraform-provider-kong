@@ -21,6 +21,10 @@ func resourceKongConsumer() *schema.Resource {
 		Update: resourceKongConsumerUpdate,
 		Delete: resourceKongConsumerDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"id": &schema.Schema{
 				Type:     schema.TypeString,
