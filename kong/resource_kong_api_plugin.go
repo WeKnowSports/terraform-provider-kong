@@ -67,7 +67,9 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
 
-	if response.StatusCode != http.StatusCreated {
+	if response.StatusCode == http.StatusConflict {
+		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
+	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 

@@ -60,7 +60,9 @@ func resourceKongConsumerCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Error while creating consumer.")
 	}
 
-	if response.StatusCode != http.StatusCreated {
+	if response.StatusCode == http.StatusConflict {
+		return fmt.Errorf("409 Conflict - use terraform import to manage this consumer.")
+	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf(response.Status)
 	}
 

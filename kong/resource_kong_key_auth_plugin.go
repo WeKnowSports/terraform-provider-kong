@@ -75,7 +75,9 @@ func resourceKeyAuthPluginCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error while creating plugin.")
 	}
 
-	if response.StatusCode != http.StatusCreated {
+	if response.StatusCode == http.StatusConflict {
+		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
+	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf(response.Status)
 	}
 
