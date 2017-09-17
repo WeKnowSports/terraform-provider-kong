@@ -23,7 +23,7 @@ func resourceKongBasicAuthCredential() *schema.Resource {
 		Delete: resourceKongBasicAuthCredentialDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: ImportConsumerCredential,
 		},
 
 		Schema: map[string]*schema.Schema{

@@ -25,7 +25,7 @@ func resourceKongJWTCredential() *schema.Resource {
 		Delete: resourceKongJWTCredentialDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: ImportConsumerCredential,
 		},
 
 		Schema: map[string]*schema.Schema{
