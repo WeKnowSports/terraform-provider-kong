@@ -68,7 +68,7 @@ func resourceKeyAuthPluginCreate(d *schema.ResourceData, meta interface{}) error
 	createdPlugin := getKeyAuthPluginFromResourceData(d)
 
 	request := sling.New().BodyJSON(plugin)
-	if plugin.API != nil {
+	if plugin.API != "" {
 		request = request.Path("apis/").Path(plugin.API + "/")
 	}
 	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
