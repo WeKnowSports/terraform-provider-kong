@@ -95,7 +95,10 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	} else if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 

@@ -101,7 +101,10 @@ func resourceKongJWTCredentialRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error while updating jwtCredential.")
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	} else if response.StatusCode != http.StatusOK {
 		return fmt.Errorf(response.Status)
 	}
 
