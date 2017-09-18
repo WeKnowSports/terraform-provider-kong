@@ -1,5 +1,9 @@
 # terraform-provider-kong (rapid7 fork)
-**NOTE**: This repository was forked from https://github.com/WeKnowSports/terraform-provider-kong. This fork's master branch updates main.go to point at this fork's kong package for use with `go get/`go install`.
+**NOTE**: This repository was forked from https://github.com/WeKnowSports/terraform-provider-kong.
+
+This fork's master branch updates main.go to point at this fork's kong package for use with `go get`/`go install`.
+
+The master branch includes several patches contributed (or in review) from the rapid7 fork back to the upstream project.
 
 ## Installation
 Install terraform and terraform-provider-kong to your `GOPATH` (e.g. under your terraform project):
