@@ -11,7 +11,7 @@ Install terraform and terraform-provider-kong to your `GOPATH` (e.g. under your 
 ```sh
 export GOPATH=$(pwd)/vendor
 export GOBIN=$(pwd)/vendor/bin
-export PATH=$(pwd)/vendor/bin
+export PATH=$(pwd)/vendor/bin:$PATH
 
 go get github.com/hashicorp/terraform
 go install github.com/hashicorp/terraform
