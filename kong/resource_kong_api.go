@@ -43,6 +43,12 @@ type APIResponse struct {
 	UpstreamReadTimeout    int      `json:"upstream_read_timeout,omitempty"`
 	HTTPSOnly              bool     `json:"https_only"`
 	HTTPIfTerminated       bool     `json:"http_if_terminated"`
+
+	// NOTE: This field is only returned in case of an error.
+	Message                string   `json:"message,omitempty"`
+}
+
+type APICreateError struct {
 }
 
 func resourceKongAPI() *schema.Resource {
@@ -160,7 +166,8 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	api := getAPIFromResourceData(d)
 
 	createdAPI := new(APIResponse)
-	response, error := sling.New().BodyJSON(api).Post("apis/").ReceiveSuccess(createdAPI)
+	errorResponse := new(APIResponse)
+	response, error := sling.New().BodyJSON(api).Post("apis/").Receive(createdAPI, errorResponse)
 
 	if error != nil {
 		return fmt.Errorf("error while creating API: " + error.Error())
@@ -169,7 +176,12 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	if response.StatusCode == http.StatusConflict {
 		return fmt.Errorf("409 Conflict - use terraform import to manage this api.")
 	} else if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		if errorResponse.Message != "" {
+			return fmt.Errorf(response.Status + ": " + errorResponse.Message)
+		} else {
+			return fmt.Errorf("unexpected status received: " + response.Status)
+		}
+
 	}
 
 	setAPIToResourceData(d, createdAPI)
