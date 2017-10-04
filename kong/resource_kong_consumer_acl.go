@@ -80,7 +80,7 @@ func resourceKongConsumerACLRead(d *schema.ResourceData, meta interface{}) error
 	sling := meta.(*sling.Sling)
 
 	consumer := d.Get("consumer").(string)
-	response, error := sling.New().Post("consumers/").Path(consumer).Path("acls/").ReceiveSuccess(nil)
+	response, error := sling.New().Path("consumers/").Path(consumer).Path("acls/").Get(d.Id()).ReceiveSuccess(nil)
 	if error != nil {
 		return fmt.Errorf("error while reading ACL" + error.Error())
 	}
