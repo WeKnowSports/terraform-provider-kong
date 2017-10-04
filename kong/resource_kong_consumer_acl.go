@@ -8,6 +8,10 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+type CreateAclRequest struct {
+	Group    string `json:"group"`
+}
+
 type ConsumerACL struct {
 	ID       string `json:"id,omitempty"`
 	Consumer string `json:"consumer_id"`
@@ -34,12 +38,14 @@ func resourceKongConsumerACL() *schema.Resource {
 			"consumer": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew: true,
 				Description: "The id of the consumer to associate this group with.",
 			},
 
 			"group": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew: true,
 				Description: "The name of the group to place the specified consumer in.",
 			},
 		},
@@ -49,12 +55,12 @@ func resourceKongConsumerACL() *schema.Resource {
 func resourceKongConsumerACLCreate(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	acl := &ConsumerACL{
-		Consumer: d.Get("consumer").(string),
+	createRequest := &CreateAclRequest{
 		Group: d.Get("group").(string),
 	}
+	consumer := d.Get("consumer").(string)
 	updated := &ConsumerACL{}
-	response, error := sling.New().BodyJSON(acl).Post("consumers/").Path(acl.Consumer).Path("acls/").ReceiveSuccess(updated)
+	response, error := sling.New().BodyJSON(createRequest).Path("consumers/").Path(consumer + "/").Post("acls/").ReceiveSuccess(updated)
 	if error != nil {
 		return fmt.Errorf("error while creating ACL" + error.Error())
 	}
