@@ -15,6 +15,7 @@ func ImportConsumerACL(d *schema.ResourceData, m interface{}) ([]*schema.Resourc
 	}
 
 	d.Set("consumer", parts[0])
+	d.Set("group", parts[1])
 	d.SetId(parts[1])
 	return []*schema.ResourceData{d}, nil
 }
