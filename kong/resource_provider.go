@@ -28,6 +28,7 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"kong_api":                            resourceKongAPI(),
 			"kong_consumer":                       resourceKongConsumer(),
+			"kong_consumer_acl":                   resourceKongConsumerACL(),
 			"kong_api_plugin":                     resourceKongPlugin(),
 			"kong_plugin":                         resourceKongPlugin(),
 			"kong_consumer_basic_auth_credential": resourceKongBasicAuthCredential(),
