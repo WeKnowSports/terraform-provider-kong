@@ -6,19 +6,18 @@ This fork's master branch updates main.go to point at this fork's kong package f
 The master branch includes several patches contributed (or in review) from the rapid7 fork back to the upstream project.
 
 ## Installation
-Install terraform and terraform-provider-kong to your `GOPATH` (e.g. under your terraform project):
+Install a binary from [releases](https://github.com/rapid7/terraform-provider-kong/releases) into your `terraform.d/plugins/${GOOS}_${GOARCH}` directory.
 
-```sh
-export GOPATH=$(pwd)/vendor
-export GOBIN=$(pwd)/vendor/bin
-export PATH=$(pwd)/vendor/bin:$PATH
+**NOTE**: Optionally this can be installed under `~/.terraform.d` in your home directory if you have multiple projects using the plugin.
 
-go get github.com/hashicorp/terraform
-go install github.com/hashicorp/terraform
+```
+# TODO: Give a wget/curl command that downloads a given release into a users terraform.d directory.
+```
 
-go get github.com/rapid7/terraform-provider-kong
-go install github.com/rapid7/terraform-provider-kong
+## Usage
+Once [installed](#installation) you can use the following to confirm you can use the plugin:
 
+```
 terraform init
 terraform plan
 ```
@@ -30,6 +29,23 @@ terraform plan
 4. Use `go install` in your terraform project.
 5. Use `terraform init` in your terraform project.
 6. Use the updated provider.
+
+## Distribution
+1. Figure out what the last released version was by looking at https://github.com/rapid7/terraform-provider-kong/releases.
+2. Create binaries for different platforms by bumping versions (use http://semver.org):
+
+  ```
+  # Ensure gox is installed and in your PATH.
+  go get github.com/mitchellh/gox
+
+  VERSION="0.1.0"
+  gox -osarch="darwin/amd64 linux/amd64" -output="dist/{{.OS}}_{{.Arch}}/{{.Dir}}_v${VERSION}"  github.com/rapid7/terraform-provider-kong
+  ```
+
+3. Create an annotated `git tag` for your version (e.g. `v0.1.0`).
+4. Push the tag and create a github release.
+    * Attach your binaries.
+    * Add the checksums into the release notes (using `shasum -a 256`).
 
 ---
 
