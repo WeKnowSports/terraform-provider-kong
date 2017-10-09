@@ -112,12 +112,15 @@ func resourceKongConsumerACLUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	consumer := d.Get("consumer").(string)
 	updated := &ConsumerACL{}
-	response, error := sling.New().BodyJSON(updateRequest).Path("consumers/").Path(consumer + "/").Path("acls/").Patch(d.Id()).ReceiveSuccess(updated)
+	failure := &UpdateAclRequest{}
+	response, error := sling.New().BodyJSON(updateRequest).Path("consumers/").Path(consumer + "/").Path("acls/").Patch(d.Id()).Receive(updated, failure)
 	if error != nil {
 		return fmt.Errorf("error while creating ACL" + error.Error())
 	}
 
-	if response.StatusCode == http.StatusNotFound {
+	if response.StatusCode == http.StatusBadRequest {
+		return fmt.Errorf(response.Status + " - " + failure.Group + "; use `terraform import <consumer>/<acl>` to manage this resource with terraform.")
+	} else if response.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	} else if response.StatusCode != http.StatusOK {
