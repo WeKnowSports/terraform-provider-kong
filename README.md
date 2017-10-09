@@ -8,10 +8,18 @@ The master branch includes several patches contributed (or in review) from the r
 ## Installation
 Install a binary from [releases](https://github.com/rapid7/terraform-provider-kong/releases) into your `terraform.d/plugins/${GOOS}_${GOARCH}` directory.
 
-**NOTE**: Optionally this can be installed under `~/.terraform.d` in your home directory if you have multiple projects using the plugin.
+**NOTE**: Optionally this can be installed under `~/.terraform.d/plugins` in your home directory if you have multiple projects using the plugin.
 
 ```
-# TODO: Give a wget/curl command that downloads a given release into a users terraform.d directory.
+GOOS=darwin
+GOARCH=amd64
+VERSION=0.1.0
+
+wget -O terraform-provider-kong_v${VERSION} https://github.com/rapid7/terraform-provider-kong/releases/download/${VERSION}/${GOOS}_${GOARCH}-terraform-provider-kong_v${VERSION}
+chmod +x terraform-provider-kong_v${VERSION}
+
+# mv terraform-provider-kong_v${VERSION} ~/.terraform.d/plugins/${GOOS}_${GOARCH}/
+mv terraform-provider-kong_v${VERSION} terraform.d/plugins/${GOOS}_${GOARCH}/
 ```
 
 ## Usage
