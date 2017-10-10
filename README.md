@@ -31,12 +31,28 @@ terraform plan
 ```
 
 ## Development
-1. Use the [installation steps](#installation) above.
-2. Update the terraform provider plugin under `${GOPATH}/src/github.com/rapid7/terraform-provider-kong`.
-3. Use `go build` in the provider plugin directory.
-4. Use `go install` in your terraform project.
-5. Use `terraform init` in your terraform project.
-6. Use the updated provider.
+See the [provider plugin codebase](https://www.terraform.io/docs/plugins/provider.html) information at terraform.io.
+
+1. Ensure `GOPATH`, `GOBIN`, and `PATH` are set.
+
+    ```bash
+  export GOPATH="${GOPATH:-$(echo -n ~/go)}"
+  export GOBIN="${GOPATH}/bin"
+  export PATH="${GOPATH}/bin:${PATH}"
+  ```
+
+2. Clone this project into `${GOPATH}/src/github.com/rapid7/terraform-provider-kong`.
+3. Install `terraform` into your `GOPATH` (required since `terraform init` will search for providers inside of `GOPATH` only):
+
+  ```
+  go get github.com/hashicorp/terraform
+  go install github.com/hashicorp/terraform
+  ```
+
+4. Make your intended changes.
+5. Use `go install` inside of `${GOPATH}/src/github.com/rapid7/terraform-provider-kong`.
+6. Use `terraform init` in your terraform project.
+7. Confirm your changes work. Profit! :tada:
 
 ## Distribution
 1. Figure out what the last released version was by looking at https://github.com/rapid7/terraform-provider-kong/releases.
