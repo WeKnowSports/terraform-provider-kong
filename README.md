@@ -35,7 +35,7 @@ See the [provider plugin codebase](https://www.terraform.io/docs/plugins/provide
 
 1. Ensure `GOPATH`, `GOBIN`, and `PATH` are set.
 
-    ```bash
+  ```bash
   export GOPATH="${GOPATH:-$(echo -n ~/go)}"
   export GOBIN="${GOPATH}/bin"
   export PATH="${GOPATH}/bin:${PATH}"
