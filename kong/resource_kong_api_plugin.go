@@ -13,7 +13,8 @@ type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
-	API           string                 `json:"api_id,omitempty"`
+	API           string                 `json:"-"`
+	Consumer      string                 `json:"consumer_id,omitempty"`
 }
 
 func resourceKongPlugin() *schema.Resource {
@@ -31,6 +32,13 @@ func resourceKongPlugin() *schema.Resource {
 			"id": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"consumer": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
+				Description: "The id of the consumer to scope this plugin to.",
 			},
 
 			"name": &schema.Schema{
@@ -159,6 +167,7 @@ func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
 		Name:          d.Get("name").(string),
 		Configuration: d.Get("config").(map[string]interface{}),
 		API:           d.Get("api").(string),
+		Consumer:      d.Get("consumer").(string),
 	}
 
 	if id, ok := d.GetOk("id"); ok {
@@ -173,4 +182,5 @@ func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
 	d.Set("name", plugin.Name)
 	d.Set("config", plugin.Configuration)
 	d.Set("api", plugin.API)
+	d.Set("consumer", plugin.Consumer)
 }
