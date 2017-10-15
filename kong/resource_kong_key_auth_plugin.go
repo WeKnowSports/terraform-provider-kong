@@ -14,7 +14,7 @@ type KeyAuthPlugin struct {
 	KeyNames      	 string                 `json:"config.key_names,omitempty"`
 	HideCredentials  bool                   `json:"config.hide_credentials,omitempty"`
 	Anonymous        string                  `json:"config.anonymous,omitempty"`
-	API              string                 `json:"-"`
+	API              string                 `json:"api_id,omitempty"`
 }
 
 func resourceKongKeyAuthPlugin() *schema.Resource {
@@ -23,6 +23,10 @@ func resourceKongKeyAuthPlugin() *schema.Resource {
 		Read:   resourceKeyAuthPluginRead,
 		Update: resourceKeyAuthPluginUpdate,
 		Delete: resourceKeyAuthPluginDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"id": &schema.Schema{
@@ -71,7 +75,9 @@ func resourceKeyAuthPluginCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error while creating plugin.")
 	}
 
-	if response.StatusCode != http.StatusCreated {
+	if response.StatusCode == http.StatusConflict {
+		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
+	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf(response.Status)
 	}
 

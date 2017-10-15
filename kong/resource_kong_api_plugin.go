@@ -13,7 +13,7 @@ type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
-	API           string                 `json:"-"`
+	API           string                 `json:"api_id,omitempty"`
 }
 
 func resourceKongPlugin() *schema.Resource {
@@ -22,6 +22,10 @@ func resourceKongPlugin() *schema.Resource {
 		Read:   resourceKongPluginRead,
 		Update: resourceKongPluginUpdate,
 		Delete: resourceKongPluginDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"id": &schema.Schema{
@@ -63,7 +67,9 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
 
-	if response.StatusCode != http.StatusCreated {
+	if response.StatusCode == http.StatusConflict {
+		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
+	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 

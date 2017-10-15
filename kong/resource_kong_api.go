@@ -52,6 +52,10 @@ func resourceKongAPI() *schema.Resource {
 		Update: resourceKongAPIUpdate,
 		Delete: resourceKongAPIDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -162,7 +166,9 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error while creating API: " + error.Error())
 	}
 
-	if response.StatusCode != http.StatusCreated {
+	if response.StatusCode == http.StatusConflict {
+		return fmt.Errorf("409 Conflict - use terraform import to manage this api.")
+	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
