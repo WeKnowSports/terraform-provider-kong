@@ -25,8 +25,8 @@ func Provider() terraform.ResourceProvider {
 			},
 			"headers": &schema.Schema{
 				Type:     schema.TypeMap,
-				Optional:    true,
-				Default: nil,
+				Optional: true,
+				Default:  nil,
 			},
 		},
 
@@ -51,7 +51,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Address: d.Get("address").(string),
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
-		Headers: d.Get("headers").(map[string]interface{}),
+		Headers:  d.Get("headers").(map[string]interface{}),
 	}
 
 	return config.Client()
