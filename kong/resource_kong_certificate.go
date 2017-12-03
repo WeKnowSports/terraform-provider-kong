@@ -34,6 +34,7 @@ func resourceKongCertificate() *schema.Resource {
 			"key": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				Description: "PEM-encoded private key of the SSL key pair.",
 			},
 		},

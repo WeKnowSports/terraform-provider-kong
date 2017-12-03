@@ -26,7 +26,7 @@ func resourceKongSNI() *schema.Resource {
 				Required:    true,
 				Description: "The SNI name to associate with the given sni.",
 			},
-			"ssl_sni_id": &schema.Schema{
+			"ssl_certificate_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The id (a UUID) of the certificate with which to associate the SNI hostname.",
