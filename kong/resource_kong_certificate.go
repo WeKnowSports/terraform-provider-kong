@@ -90,7 +90,7 @@ func resourceKongCertificateUpdate(d *schema.ResourceData, meta interface{}) err
 
 	updatedCertificate := getCertificateFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(certificate).Path("certificates/").Path(certificate.ID).ReceiveSuccess(updatedCertificate)
+	response, error := sling.New().BodyJSON(certificate).Path("certificates/").Patch(certificate.ID).ReceiveSuccess(updatedCertificate)
 	if error != nil {
 		return fmt.Errorf("Error while updating certificate")
 	}
