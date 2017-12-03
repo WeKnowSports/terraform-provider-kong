@@ -6,14 +6,12 @@ import (
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
-	"strings"
 )
 
 type Certificate struct {
 	ID   string `json:"id,omitempty"`
 	Cert string `json:"cert,omitempty"`
 	Key  string `json:"key,omitempty"`
-	SNIs string `json:"snis,omitempty"`
 }
 
 func resourceKongCertificate() *schema.Resource {
@@ -37,13 +35,6 @@ func resourceKongCertificate() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "PEM-encoded private key of the SSL key pair.",
-			},
-			"snis": &schema.Schema{
-				Type: schema.TypeString,
-				Description: "One or more hostnames to associate with this certificate as an SNI. This is a sugar " +
-					"parameter that will, under the hood, create an SNI object and associate it with this certificate " +
-					"for your convenience.",
-				Optional: true,
 			},
 		},
 	}
@@ -131,17 +122,9 @@ func resourceKongCertificateDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func getCertificateFromResourceData(d *schema.ResourceData) *Certificate {
-	stSnis := d.Get("snis").([]interface{})
-
-	snis := make([]string, len(stSnis))
-	for i, v := range stSnis {
-		snis[i] = v.(string)
-	}
-
 	certificate := &Certificate{
 		Cert: d.Get("cert").(string),
 		Key:  d.Get("key").(string),
-		SNIs: strings.Join(snis, ","),
 	}
 
 	if id, ok := d.GetOk("id"); ok {
@@ -155,12 +138,4 @@ func setCertificateToResourceData(d *schema.ResourceData, certificate *Certifica
 	d.SetId(certificate.ID)
 	d.Set("cert", certificate.Cert)
 	d.Set("key", certificate.Key)
-
-	snis := make([]interface{}, len(certificate.SNIs))
-
-	for i, v := range strings.Split(certificate.SNIs, ",") {
-		snis[i] = v
-	}
-
-	d.Set("snis", snis)
 }
