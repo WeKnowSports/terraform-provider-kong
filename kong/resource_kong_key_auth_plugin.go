@@ -9,12 +9,12 @@ import (
 )
 
 type KeyAuthPlugin struct {
-	ID               string                 `json:"id,omitempty"`
-	Name             string                 `json:"name,omitempty"`
-	KeyNames      	 string                 `json:"config.key_names,omitempty"`
-	HideCredentials  bool                   `json:"config.hide_credentials,omitempty"`
-	Anonymous        string                  `json:"config.anonymous,omitempty"`
-	API              string                 `json:"api_id,omitempty"`
+	ID              string `json:"id,omitempty"`
+	Name            string `json:"name,omitempty"`
+	KeyNames        string `json:"config.key_names,omitempty"`
+	HideCredentials bool   `json:"config.hide_credentials,omitempty"`
+	Anonymous       string `json:"config.anonymous,omitempty"`
+	API             string `json:"api_id,omitempty"`
 }
 
 func resourceKongKeyAuthPlugin() *schema.Resource {
@@ -34,26 +34,26 @@ func resourceKongKeyAuthPlugin() *schema.Resource {
 				Computed: true,
 			},
 
-      "key_names": &schema.Schema{
-        Type:   schema.TypeString,
-        Required: true,
-        Default: nil,
-        Description: "The name of the API key header to use.",
-      },
+			"key_names": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				Default:     nil,
+				Description: "The name of the API key header to use.",
+			},
 
-      "hide_credentials": &schema.Schema{
-        Type: schema.TypeBool,
-        Optional: true,
-        Default: nil,
-        Description: "Whether credentials should be hidden.",
-      },
+			"hide_credentials": &schema.Schema{
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     nil,
+				Description: "Whether credentials should be hidden.",
+			},
 
-      "anonymous": &schema.Schema{
-        Type: schema.TypeString,
-        Optional: true,
-        Default: nil,
-        Description: "String (consumer UUID) to use as an anonymous 'consumer', if authentication fails.",
-      },
+			"anonymous": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
+				Description: "String (consumer UUID) to use as an anonymous 'consumer', if authentication fails.",
+			},
 
 			"api": &schema.Schema{
 				Type:     schema.TypeString,

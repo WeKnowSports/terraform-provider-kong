@@ -15,13 +15,13 @@ func Provider() terraform.ResourceProvider {
 			},
 			"username": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional:    true,
-				Default: "",
+				Optional: true,
+				Default:  "",
 			},
 			"password": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional:    true,
-				Default: "",
+				Optional: true,
+				Default:  "",
 			},
 		},
 
@@ -43,7 +43,7 @@ func Provider() terraform.ResourceProvider {
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	config := Config{
-		Address: d.Get("address").(string),
+		Address:  d.Get("address").(string),
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
 	}

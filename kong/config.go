@@ -5,7 +5,7 @@ import (
 )
 
 type Config struct {
-	Address string
+	Address  string
 	Username string
 	Password string
 }

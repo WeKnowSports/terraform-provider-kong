@@ -9,9 +9,9 @@ import (
 )
 
 type ConsumerACLGroup struct {
-	ID           string `json:"id,omitempty"`
-	Group        string `json:"group,omitempty"`
-	Consumer     string `json:"-"`
+	ID       string `json:"id,omitempty"`
+	Group    string `json:"group,omitempty"`
+	Consumer string `json:"-"`
 }
 
 func resourceKongConsumerACLGroup() *schema.Resource {
