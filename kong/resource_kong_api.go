@@ -43,9 +43,6 @@ type APIResponse struct {
 	UpstreamReadTimeout    int      `json:"upstream_read_timeout,omitempty"`
 	HTTPSOnly              bool     `json:"https_only"`
 	HTTPIfTerminated       bool     `json:"http_if_terminated"`
-
-	// NOTE: This field is only returned in case of an error.
-	Message string `json:"message,omitempty"`
 }
 
 type APICreateError struct {
@@ -166,7 +163,7 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	api := getAPIFromResourceData(d)
 
 	createdAPI := new(APIResponse)
-	errorResponse := new(APIResponse)
+	errorResponse := new(ErrorResponse)
 	response, error := sling.New().BodyJSON(api).Post("apis/").Receive(createdAPI, errorResponse)
 
 	if error != nil {
@@ -176,12 +173,7 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	if response.StatusCode == http.StatusConflict {
 		return fmt.Errorf("409 Conflict - use terraform import to manage this api.")
 	} else if response.StatusCode != http.StatusCreated {
-		if errorResponse.Message != "" {
-			return fmt.Errorf(response.Status + ": " + errorResponse.Message)
-		} else {
-			return fmt.Errorf("unexpected status received: " + response.Status)
-		}
-
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setAPIToResourceData(d, createdAPI)
@@ -195,17 +187,18 @@ func resourceKongAPIRead(d *schema.ResourceData, meta interface{}) error {
 	id := d.Get("id").(string)
 	api := new(APIResponse)
 
-	response, error := sling.New().Path("apis/").Get(id).ReceiveSuccess(api)
+	errorResponse := new(ErrorResponse)
+	response, error := sling.New().Path("apis/").Get(id).Receive(api, errorResponse)
 
 	if error != nil {
-		return fmt.Errorf("error while updating API" + error.Error())
+		return fmt.Errorf("error while reading API: %v", error.Error())
 	}
 
 	if response.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	} else if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setAPIToResourceData(d, api)
@@ -219,15 +212,15 @@ func resourceKongAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	api := getAPIFromResourceData(d)
 
 	updatedAPI := new(APIResponse)
-
-	response, error := sling.New().BodyJSON(api).Patch("apis/").Path(api.ID).ReceiveSuccess(updatedAPI)
+	errorResponse := new(ErrorResponse)
+	response, error := sling.New().BodyJSON(api).Patch("apis/").Path(api.ID).Receive(updatedAPI, errorResponse)
 
 	if error != nil {
-		return fmt.Errorf("error while updating API" + error.Error())
+		return fmt.Errorf("error while updating API: %v", error.Error())
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setAPIToResourceData(d, updatedAPI)
@@ -240,13 +233,14 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 
 	id := d.Get("id").(string)
 
-	response, error := sling.New().Delete("apis/").Path(id).ReceiveSuccess(nil)
+	errorResponse := new(ErrorResponse)
+	response, error := sling.New().Delete("apis/").Path(id).Receive(nil, errorResponse)
 	if error != nil {
-		return fmt.Errorf("error while deleting API" + error.Error())
+		return fmt.Errorf("error while deleting API: %v", error.Error())
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	return nil
