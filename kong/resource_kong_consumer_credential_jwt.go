@@ -59,6 +59,7 @@ func resourceKongJWTCredential() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
+				Sensitive:   true,
 				Description: "If algorithm is HS256, the secret used to sign JWTs for this credential. If left out, will be auto-generated.",
 			},
 

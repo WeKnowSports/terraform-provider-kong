@@ -42,6 +42,7 @@ func resourceKongBasicAuthCredential() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
+				Sensitive:   true,
 				Description: "The password to use in the Basic Authentication.",
 			},
 
