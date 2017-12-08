@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func ErrorFromResponse(response *http.Response, errorResponse *map[string]interface{}) error {
+func ErrorFromResponse(response *http.Response, errorResponse map[string]interface{}) error {
 	bytes, err := json.MarshalIndent(errorResponse, "", "  ")
 	if err != nil {
 		return fmt.Errorf("unexpected status (%v) received: %v", response.Status, errorResponse)
