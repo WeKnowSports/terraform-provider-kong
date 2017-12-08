@@ -67,7 +67,7 @@ func resourceKongConsumerACLCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if response.StatusCode == http.StatusBadRequest {
-		return fmt.Errorf("%v - %v; use `terraform import %s/%s` to manage this resource with terraform.", resource.Status, errorResponse["group"], consumer, createRequest.Group)
+		return fmt.Errorf("%v - %v; use `terraform import %s/%s` to manage this resource with terraform.", response.Status, errorResponse["group"], consumer, createRequest.Group)
 	} else if response.StatusCode != http.StatusCreated {
 		return ErrorFromResponse(response, errorResponse)
 	}
@@ -120,7 +120,7 @@ func resourceKongConsumerACLUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if response.StatusCode == http.StatusBadRequest {
-		return fmt.Errorf("%v - %v; use `terraform import %v/%v` to manage this resource with terraform.", resource.Status, errorResponse["group"], consumer, updateRequest.Group)
+		return fmt.Errorf("%v - %v; use `terraform import %v/%v` to manage this resource with terraform.", response.Status, errorResponse["group"], consumer, updateRequest.Group)
 	} else if response.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
