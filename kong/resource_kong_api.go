@@ -163,7 +163,7 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	api := getAPIFromResourceData(d)
 
 	createdAPI := new(APIResponse)
-	errorResponse := new(ErrorResponse)
+	errorResponse := make(map[string]interface{})
 	response, error := sling.New().BodyJSON(api).Post("apis/").Receive(createdAPI, errorResponse)
 
 	if error != nil {
@@ -187,7 +187,7 @@ func resourceKongAPIRead(d *schema.ResourceData, meta interface{}) error {
 	id := d.Get("id").(string)
 	api := new(APIResponse)
 
-	errorResponse := new(ErrorResponse)
+	errorResponse := make(map[string]interface{})
 	response, error := sling.New().Path("apis/").Get(id).Receive(api, errorResponse)
 
 	if error != nil {
@@ -212,7 +212,7 @@ func resourceKongAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	api := getAPIFromResourceData(d)
 
 	updatedAPI := new(APIResponse)
-	errorResponse := new(ErrorResponse)
+	errorResponse := make(map[string]interface{})
 	response, error := sling.New().BodyJSON(api).Patch("apis/").Path(api.ID).Receive(updatedAPI, errorResponse)
 
 	if error != nil {
@@ -233,7 +233,7 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 
 	id := d.Get("id").(string)
 
-	errorResponse := new(ErrorResponse)
+	errorResponse := make(map[string]interface{})
 	response, error := sling.New().Delete("apis/").Path(id).Receive(nil, errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while deleting API: %v", error.Error())

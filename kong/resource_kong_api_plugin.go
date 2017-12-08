@@ -75,7 +75,8 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	if plugin.API != "" {
 		request = request.Path("apis/").Path(plugin.API + "/")
 	}
-	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
+	errorResponse := make(map[string]interface{})
+	response, error := request.Post("plugins/").Receive(createdPlugin, errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
@@ -83,7 +84,7 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	if response.StatusCode == http.StatusConflict {
 		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
 	} else if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	createdPlugin.Configuration = plugin.Configuration
@@ -103,7 +104,8 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 		configuration[key] = value
 	}
 
-	response, error := sling.New().Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("plugins/").Get(plugin.ID).Receive(plugin, errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
@@ -112,7 +114,7 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	} else if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	plugin.Configuration = configuration
@@ -129,13 +131,14 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	updatedPlugin := getPluginFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).Receive(updatedPlugin, errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	updatedPlugin.Configuration = plugin.Configuration
@@ -150,13 +153,14 @@ func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 
 	plugin := getPluginFromResourceData(d)
 
-	response, error := sling.New().Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("plugins/").Delete(plugin.ID).Receive(nil, errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while deleting plugin: " + error.Error())
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	return nil
