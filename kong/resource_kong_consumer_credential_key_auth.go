@@ -130,7 +130,7 @@ func resourceKongKeyAuthCredentialDelete(d *schema.ResourceData, meta interface{
 
 func getKeyAuthCredentialFromResourceData(d *schema.ResourceData) *KeyAuthCredential {
 	keyAuthCredential := &KeyAuthCredential{
-		Key: d.Get("key").(string),
+		Key:      d.Get("key").(string),
 		Consumer: d.Get("consumer").(string),
 	}
 

@@ -45,7 +45,7 @@ type APIResponse struct {
 	HTTPIfTerminated       bool     `json:"http_if_terminated"`
 
 	// NOTE: This field is only returned in case of an error.
-	Message                string   `json:"message,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 type APICreateError struct {

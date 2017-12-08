@@ -9,7 +9,7 @@ import (
 )
 
 type UpdateAclRequest struct {
-	Group    string `json:"group"`
+	Group string `json:"group"`
 }
 
 type ConsumerACL struct {
@@ -39,7 +39,7 @@ func resourceKongConsumerACL() *schema.Resource {
 			"consumer": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "The id of the consumer to associate this group with.",
 			},
 
@@ -61,7 +61,7 @@ func resourceKongConsumerACLCreate(d *schema.ResourceData, meta interface{}) err
 	consumer := d.Get("consumer").(string)
 	updated := &ConsumerACL{}
 	failure := &UpdateAclRequest{}
-	response, error := sling.New().BodyJSON(createRequest).Path("consumers/").Path(consumer + "/").Post("acls/").Receive(updated, failure)
+	response, error := sling.New().BodyJSON(createRequest).Path("consumers/").Path(consumer+"/").Post("acls/").Receive(updated, failure)
 	if error != nil {
 		return fmt.Errorf("error while creating ACL" + error.Error())
 	}
@@ -113,7 +113,7 @@ func resourceKongConsumerACLUpdate(d *schema.ResourceData, meta interface{}) err
 	consumer := d.Get("consumer").(string)
 	updated := &ConsumerACL{}
 	failure := &UpdateAclRequest{}
-	response, error := sling.New().BodyJSON(updateRequest).Path("consumers/").Path(consumer + "/").Path("acls/").Patch(d.Id()).Receive(updated, failure)
+	response, error := sling.New().BodyJSON(updateRequest).Path("consumers/").Path(consumer+"/").Path("acls/").Patch(d.Id()).Receive(updated, failure)
 	if error != nil {
 		return fmt.Errorf("error while creating ACL" + error.Error())
 	}
@@ -133,7 +133,6 @@ func resourceKongConsumerACLUpdate(d *schema.ResourceData, meta interface{}) err
 
 	return nil
 }
-
 
 func resourceKongConsumerACLDelete(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
