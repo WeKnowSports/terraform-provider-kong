@@ -6,6 +6,7 @@ import (
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
+	"strings"
 )
 
 type Certificate struct {
@@ -30,12 +31,18 @@ func resourceKongCertificate() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "PEM-encoded public certificate of the SSL key pair.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 			},
 			"key": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
 				Description: "PEM-encoded private key of the SSL key pair.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 			},
 		},
 	}
