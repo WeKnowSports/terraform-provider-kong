@@ -76,7 +76,7 @@ func resourceKeyAuthPluginCreate(d *schema.ResourceData, meta interface{}) error
 		request = request.Path("apis/").Path(plugin.API + "/")
 	}
 	errorResponse := make(map[string]interface{})
-	response, error := request.Post("plugins/").Receive(createdPlugin, errorResponse)
+	response, error := request.Post("plugins/").Receive(createdPlugin, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while creating plugin.")
 	}
@@ -98,7 +98,7 @@ func resourceKeyAuthPluginRead(d *schema.ResourceData, meta interface{}) error {
 	plugin := getKeyAuthPluginFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().Path("plugins/").Get(plugin.ID).Receive(plugin, errorResponse)
+	response, error := sling.New().Path("plugins/").Get(plugin.ID).Receive(plugin, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating plugin.")
 	}
@@ -123,7 +123,7 @@ func resourceKeyAuthPluginUpdate(d *schema.ResourceData, meta interface{}) error
 	updatedPlugin := getKeyAuthPluginFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).Receive(updatedPlugin, errorResponse)
+	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).Receive(updatedPlugin, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating plugin.")
 	}
@@ -143,7 +143,7 @@ func resourceKeyAuthPluginDelete(d *schema.ResourceData, meta interface{}) error
 	plugin := getKeyAuthPluginFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().Path("plugins/").Delete(plugin.ID).Receive(nil, errorResponse)
+	response, error := sling.New().Path("plugins/").Delete(plugin.ID).Receive(nil, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while deleting plugin.")
 	}

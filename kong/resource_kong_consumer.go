@@ -56,7 +56,7 @@ func resourceKongConsumerCreate(d *schema.ResourceData, meta interface{}) error 
 	createdConsumer := new(Consumer)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().BodyJSON(consumer).Post("consumers/").Receive(createdConsumer, errorResponse)
+	response, error := sling.New().BodyJSON(consumer).Post("consumers/").Receive(createdConsumer, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while creating consumer.")
 	}
@@ -79,7 +79,7 @@ func resourceKongConsumerRead(d *schema.ResourceData, meta interface{}) error {
 	consumer := new(Consumer)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().Path("consumers/").Get(id).Receive(consumer, errorResponse)
+	response, error := sling.New().Path("consumers/").Get(id).Receive(consumer, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating consumer.")
 	}
@@ -104,7 +104,7 @@ func resourceKongConsumerUpdate(d *schema.ResourceData, meta interface{}) error 
 	updatedConsumer := new(Consumer)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().BodyJSON(consumer).Patch("consumers/").Path(consumer.ID).Receive(updatedConsumer, errorResponse)
+	response, error := sling.New().BodyJSON(consumer).Patch("consumers/").Path(consumer.ID).Receive(updatedConsumer, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating consumer.")
 	}
@@ -124,7 +124,7 @@ func resourceKongConsumerDelete(d *schema.ResourceData, meta interface{}) error 
 	id := d.Get("id").(string)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().Delete("consumers/").Path(id).Receive(nil, errorResponse)
+	response, error := sling.New().Delete("consumers/").Path(id).Receive(nil, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while deleting consumer.")
 	}

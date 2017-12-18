@@ -62,7 +62,7 @@ func resourceKongBasicAuthCredentialCreate(d *schema.ResourceData, meta interfac
 	createdBasicAuthCredential := getBasicAuthCredentialFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer+"/").Post("basic-auth/").Receive(createdBasicAuthCredential, errorResponse)
+	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer+"/").Post("basic-auth/").Receive(createdBasicAuthCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while creating basicAuthCredential.")
 	}
@@ -82,7 +82,7 @@ func resourceKongBasicAuthCredentialRead(d *schema.ResourceData, meta interface{
 	basicAuthCredential := getBasicAuthCredentialFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer+"/").Path("basic-auth/").Get(basicAuthCredential.ID).Receive(basicAuthCredential, errorResponse)
+	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer+"/").Path("basic-auth/").Get(basicAuthCredential.ID).Receive(basicAuthCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating basicAuthCredential.")
 	}
@@ -107,7 +107,7 @@ func resourceKongBasicAuthCredentialUpdate(d *schema.ResourceData, meta interfac
 	updatedBasicAuthCredential := getBasicAuthCredentialFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer+"/").Patch("basic-auth/").Path(basicAuthCredential.ID).Receive(updatedBasicAuthCredential, errorResponse)
+	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer+"/").Patch("basic-auth/").Path(basicAuthCredential.ID).Receive(updatedBasicAuthCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating basicAuthCredential.")
 	}
@@ -127,7 +127,7 @@ func resourceKongBasicAuthCredentialDelete(d *schema.ResourceData, meta interfac
 	basicAuthCredential := getBasicAuthCredentialFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer+"/").Path("basic-auth/").Delete(basicAuthCredential.ID).Receive(nil, errorResponse)
+	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer+"/").Path("basic-auth/").Delete(basicAuthCredential.ID).Receive(nil, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while deleting basicAuthCredential.")
 	}

@@ -55,7 +55,7 @@ func resourceKongKeyAuthCredentialCreate(d *schema.ResourceData, meta interface{
 	createdKeyAuthCredential := getKeyAuthCredentialFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().BodyJSON(keyAuthCredential).Path("consumers/").Path(keyAuthCredential.Consumer+"/").Post("key-auth/").Receive(createdKeyAuthCredential, errorResponse)
+	response, error := sling.New().BodyJSON(keyAuthCredential).Path("consumers/").Path(keyAuthCredential.Consumer+"/").Post("key-auth/").Receive(createdKeyAuthCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while creating keyAuthCredential.")
 	}
@@ -75,7 +75,7 @@ func resourceKongKeyAuthCredentialRead(d *schema.ResourceData, meta interface{})
 	keyAuthCredential := getKeyAuthCredentialFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().Path("consumers/").Path(keyAuthCredential.Consumer+"/").Path("key-auth/").Get(keyAuthCredential.ID).Receive(keyAuthCredential, errorResponse)
+	response, error := sling.New().Path("consumers/").Path(keyAuthCredential.Consumer+"/").Path("key-auth/").Get(keyAuthCredential.ID).Receive(keyAuthCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating keyAuthCredential.")
 	}
@@ -100,7 +100,7 @@ func resourceKongKeyAuthCredentialUpdate(d *schema.ResourceData, meta interface{
 	updatedKeyAuthCredential := getKeyAuthCredentialFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().BodyJSON(keyAuthCredential).Path("consumers/").Path(keyAuthCredential.Consumer+"/").Patch("key-auth/").Path(keyAuthCredential.ID).Receive(updatedKeyAuthCredential, errorResponse)
+	response, error := sling.New().BodyJSON(keyAuthCredential).Path("consumers/").Path(keyAuthCredential.Consumer+"/").Patch("key-auth/").Path(keyAuthCredential.ID).Receive(updatedKeyAuthCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating keyAuthCredential.")
 	}
@@ -120,7 +120,7 @@ func resourceKongKeyAuthCredentialDelete(d *schema.ResourceData, meta interface{
 	keyAuthCredential := getKeyAuthCredentialFromResourceData(d)
 
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().Path("consumers/").Path(keyAuthCredential.Consumer+"/").Path("key-auth/").Delete(keyAuthCredential.ID).Receive(nil, errorResponse)
+	response, error := sling.New().Path("consumers/").Path(keyAuthCredential.Consumer+"/").Path("key-auth/").Delete(keyAuthCredential.ID).Receive(nil, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while deleting keyAuthCredential.")
 	}

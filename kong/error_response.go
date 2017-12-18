@@ -9,7 +9,7 @@ import (
 func ErrorFromResponse(response *http.Response, errorResponse map[string]interface{}) error {
 	bytes, err := json.MarshalIndent(errorResponse, "", "  ")
 	if err != nil {
-		return fmt.Errorf("unexpected status (%v) received: %v", response.Status, errorResponse)
+		return fmt.Errorf("unexpected status (%v) and error marshalling error response: %v", response.Status, errorResponse)
 	} else {
 		return fmt.Errorf("unexpected status (%v) received: %v", response.Status, string(bytes))
 	}

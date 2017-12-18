@@ -61,7 +61,7 @@ func resourceKongConsumerACLCreate(d *schema.ResourceData, meta interface{}) err
 	consumer := d.Get("consumer").(string)
 	updated := &ConsumerACL{}
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().BodyJSON(createRequest).Path("consumers/").Path(consumer+"/").Post("acls/").Receive(updated, errorResponse)
+	response, error := sling.New().BodyJSON(createRequest).Path("consumers/").Path(consumer+"/").Post("acls/").Receive(updated, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while creating ACL" + error.Error())
 	}
@@ -85,7 +85,7 @@ func resourceKongConsumerACLRead(d *schema.ResourceData, meta interface{}) error
 	consumer := d.Get("consumer").(string)
 	updated := &ConsumerACL{}
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().Path("consumers/").Path(consumer+"/").Path("acls/").Get(d.Id()).Receive(updated, errorResponse)
+	response, error := sling.New().Path("consumers/").Path(consumer+"/").Path("acls/").Get(d.Id()).Receive(updated, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while reading ACL" + error.Error())
 	}
@@ -114,7 +114,7 @@ func resourceKongConsumerACLUpdate(d *schema.ResourceData, meta interface{}) err
 	consumer := d.Get("consumer").(string)
 	updated := &ConsumerACL{}
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().BodyJSON(updateRequest).Path("consumers/").Path(consumer+"/").Path("acls/").Patch(d.Id()).Receive(updated, errorResponse)
+	response, error := sling.New().BodyJSON(updateRequest).Path("consumers/").Path(consumer+"/").Path("acls/").Patch(d.Id()).Receive(updated, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while creating ACL" + error.Error())
 	}
@@ -140,7 +140,7 @@ func resourceKongConsumerACLDelete(d *schema.ResourceData, meta interface{}) err
 
 	consumer := d.Get("consumer").(string)
 	errorResponse := make(map[string]interface{})
-	response, error := sling.New().Path("consumers/").Path(consumer+"/").Path("acls/").Delete(d.Id()).Receive(nil, errorResponse)
+	response, error := sling.New().Path("consumers/").Path(consumer+"/").Path("acls/").Delete(d.Id()).Receive(nil, &errorResponse)
 
 	if error != nil {
 		return fmt.Errorf("error while deleting ACL" + error.Error())
