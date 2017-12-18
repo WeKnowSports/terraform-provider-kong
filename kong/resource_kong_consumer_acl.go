@@ -60,16 +60,16 @@ func resourceKongConsumerACLCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	consumer := d.Get("consumer").(string)
 	updated := &ConsumerACL{}
-	failure := &UpdateAclRequest{}
-	response, error := sling.New().BodyJSON(createRequest).Path("consumers/").Path(consumer+"/").Post("acls/").Receive(updated, failure)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().BodyJSON(createRequest).Path("consumers/").Path(consumer+"/").Post("acls/").Receive(updated, errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while creating ACL" + error.Error())
 	}
 
 	if response.StatusCode == http.StatusBadRequest {
-		return fmt.Errorf(response.Status + " - " + failure.Group + "; use `terraform import <consumer>/<acl>` to manage this resource with terraform.")
+		return fmt.Errorf("%v - %v; use `terraform import %s/%s` to manage this resource with terraform.", response.Status, errorResponse["group"], consumer, createRequest.Group)
 	} else if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	d.Set("consumer", updated.Consumer)
@@ -84,7 +84,8 @@ func resourceKongConsumerACLRead(d *schema.ResourceData, meta interface{}) error
 
 	consumer := d.Get("consumer").(string)
 	updated := &ConsumerACL{}
-	response, error := sling.New().Path("consumers/").Path(consumer + "/").Path("acls/").Get(d.Id()).ReceiveSuccess(updated)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("consumers/").Path(consumer+"/").Path("acls/").Get(d.Id()).Receive(updated, errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while reading ACL" + error.Error())
 	}
@@ -93,7 +94,7 @@ func resourceKongConsumerACLRead(d *schema.ResourceData, meta interface{}) error
 		d.SetId("")
 		return nil
 	} else if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	d.Set("consumer", updated.Consumer)
@@ -112,19 +113,19 @@ func resourceKongConsumerACLUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	consumer := d.Get("consumer").(string)
 	updated := &ConsumerACL{}
-	failure := &UpdateAclRequest{}
-	response, error := sling.New().BodyJSON(updateRequest).Path("consumers/").Path(consumer+"/").Path("acls/").Patch(d.Id()).Receive(updated, failure)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().BodyJSON(updateRequest).Path("consumers/").Path(consumer+"/").Path("acls/").Patch(d.Id()).Receive(updated, errorResponse)
 	if error != nil {
 		return fmt.Errorf("error while creating ACL" + error.Error())
 	}
 
 	if response.StatusCode == http.StatusBadRequest {
-		return fmt.Errorf(response.Status + " - " + failure.Group + "; use `terraform import <consumer>/<acl>` to manage this resource with terraform.")
+		return fmt.Errorf("%v - %v; use `terraform import %v/%v` to manage this resource with terraform.", response.Status, errorResponse["group"], consumer, updateRequest.Group)
 	} else if response.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	} else if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	d.Set("consumer", updated.Consumer)
@@ -138,14 +139,15 @@ func resourceKongConsumerACLDelete(d *schema.ResourceData, meta interface{}) err
 	sling := meta.(*sling.Sling)
 
 	consumer := d.Get("consumer").(string)
-	response, error := sling.New().Path("consumers/").Path(consumer + "/").Path("acls/").Delete(d.Id()).ReceiveSuccess(nil)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("consumers/").Path(consumer+"/").Path("acls/").Delete(d.Id()).Receive(nil, errorResponse)
 
 	if error != nil {
 		return fmt.Errorf("error while deleting ACL" + error.Error())
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	return nil
