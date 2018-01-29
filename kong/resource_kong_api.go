@@ -1,6 +1,7 @@
 package kong
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -29,20 +30,58 @@ type APIRequest struct {
 
 // APIResponse : Kong API response object structure
 type APIResponse struct {
-	ID                     string   `json:"id,omitempty"`
-	Name                   string   `json:"name"`
-	Hosts                  []string `json:"hosts,omitempty"`
-	Uris                   []string `json:"uris,omitempty"`
-	Methods                []string `json:"methods,omitempty"`
-	UpstreamURL            string   `json:"upstream_url"`
-	StripURI               bool     `json:"strip_uri"`
-	PreserveHost           bool     `json:"preserve_host"`
-	Retries                int      `json:"retries,omitempty"`
-	UpstreamConnectTimeout int      `json:"upstream_connect_timeout,omitempty"`
-	UpstreamSendTimeout    int      `json:"upstream_send_timeout,omitempty"`
-	UpstreamReadTimeout    int      `json:"upstream_read_timeout,omitempty"`
-	HTTPSOnly              bool     `json:"https_only"`
-	HTTPIfTerminated       bool     `json:"http_if_terminated"`
+	ID                     string `json:"id,omitempty"`
+	Name                   string `json:"name"`
+	UpstreamURL            string `json:"upstream_url"`
+	StripURI               bool   `json:"strip_uri"`
+	PreserveHost           bool   `json:"preserve_host"`
+	Retries                int    `json:"retries,omitempty"`
+	UpstreamConnectTimeout int    `json:"upstream_connect_timeout,omitempty"`
+	UpstreamSendTimeout    int    `json:"upstream_send_timeout,omitempty"`
+	UpstreamReadTimeout    int    `json:"upstream_read_timeout,omitempty"`
+	HTTPSOnly              bool   `json:"https_only"`
+	HTTPIfTerminated       bool   `json:"http_if_terminated"`
+
+	// These will be set in our UnmarshalJSON function.
+	Hosts   []string `json:"-"`
+	Methods []string `json:"-"`
+	Uris    []string `json:"-"`
+}
+
+func (r *APIResponse) UnmarshalJSON(data []byte) error {
+	type Alias APIResponse
+	wrapped := &struct {
+		RawHosts   interface{} `json:"hosts,omitempty"`
+		RawMethods interface{} `json:"methods,omitempty"`
+		RawUris    interface{} `json:"uris,omitempty"`
+		*Alias
+	}{
+		Alias: (*Alias)(r),
+	}
+
+	if err := json.Unmarshal(data, &wrapped); err != nil {
+		return err
+	}
+
+	if hosts, ok := wrapped.RawHosts.([]interface{}); ok {
+		for _, host := range hosts {
+			r.Hosts = append(r.Hosts, host.(string))
+		}
+	}
+
+	if methods, ok := wrapped.RawMethods.([]interface{}); ok {
+		for _, method := range methods {
+			r.Methods = append(r.Methods, method.(string))
+		}
+	}
+
+	if uris, ok := wrapped.RawUris.([]interface{}); ok {
+		for _, uri := range uris {
+			r.Uris = append(r.Uris, uri.(string))
+		}
+	}
+
+	return nil
 }
 
 type APICreateError struct {
@@ -273,9 +312,9 @@ func getAPIFromResourceData(d *schema.ResourceData) *APIRequest {
 func setAPIToResourceData(d *schema.ResourceData, api *APIResponse) {
 	d.SetId(api.ID)
 	d.Set("name", api.Name)
-	d.Set("hosts", api.Hosts)
+	d.Set("hosts", strings.Join(api.Hosts, ","))
 	d.Set("uris", strings.Join(api.Uris, ","))
-	d.Set("methods", api.Methods)
+	d.Set("methods", strings.Join(api.Methods, ","))
 	d.Set("upstream_url", api.UpstreamURL)
 	d.Set("strip_uri", api.StripURI)
 	d.Set("preserve_host", api.PreserveHost)
