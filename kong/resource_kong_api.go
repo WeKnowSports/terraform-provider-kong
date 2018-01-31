@@ -27,24 +27,6 @@ type APIRequest struct {
 	HTTPIfTerminated       bool   `json:"http_if_terminated"`
 }
 
-// APIResponse : Kong API response object structure
-type APIResponse struct {
-	ID                     string   `json:"id,omitempty"`
-	Name                   string   `json:"name"`
-	Hosts                  []string `json:"hosts,omitempty"`
-	Uris                   []string `json:"uris,omitempty"`
-	Methods                []string `json:"methods,omitempty"`
-	UpstreamURL            string   `json:"upstream_url"`
-	StripURI               bool     `json:"strip_uri"`
-	PreserveHost           bool     `json:"preserve_host"`
-	Retries                int      `json:"retries,omitempty"`
-	UpstreamConnectTimeout int      `json:"upstream_connect_timeout,omitempty"`
-	UpstreamSendTimeout    int      `json:"upstream_send_timeout,omitempty"`
-	UpstreamReadTimeout    int      `json:"upstream_read_timeout,omitempty"`
-	HTTPSOnly              bool     `json:"https_only"`
-	HTTPIfTerminated       bool     `json:"http_if_terminated"`
-}
-
 type APICreateError struct {
 }
 
@@ -273,9 +255,9 @@ func getAPIFromResourceData(d *schema.ResourceData) *APIRequest {
 func setAPIToResourceData(d *schema.ResourceData, api *APIResponse) {
 	d.SetId(api.ID)
 	d.Set("name", api.Name)
-	d.Set("hosts", api.Hosts)
+	d.Set("hosts", strings.Join(api.Hosts, ","))
 	d.Set("uris", strings.Join(api.Uris, ","))
-	d.Set("methods", api.Methods)
+	d.Set("methods", strings.Join(api.Methods, ","))
 	d.Set("upstream_url", api.UpstreamURL)
 	d.Set("strip_uri", api.StripURI)
 	d.Set("preserve_host", api.PreserveHost)
