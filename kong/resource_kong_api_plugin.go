@@ -114,8 +114,6 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 		return ErrorFromResponse(response, errorResponse)
 	}
 
-	createdPlugin.Configuration = plugin.Configuration
-
 	setPluginToResourceData(d, createdPlugin)
 
 	return nil
@@ -165,8 +163,6 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	if response.StatusCode != http.StatusOK {
 		return ErrorFromResponse(response, errorResponse)
 	}
-
-	updatedPlugin.Configuration = plugin.Configuration
 
 	setPluginToResourceData(d, updatedPlugin)
 
@@ -219,13 +215,13 @@ func setPluginConfig(d *schema.ResourceData, config map[string]interface{}) erro
 }
 
 func getPluginConfig(d *schema.ResourceData) (map[string]interface{}, error) {
-	if config := d.Get("config"); config != nil {
+	if config, ok := d.GetOk("config"); ok {
 		return config.(map[string]interface{}), nil
 	}
 
-	if configBlob := d.Get("config_json"); configBlob != nil {
+	if configBlob, ok := d.GetOk("config_json"); ok {
 		var config map[string]interface{}
-		err := json.Unmarshal(configBlob.([]byte), config)
+		err := json.Unmarshal([]byte(configBlob.(string)), &config)
 		if err != nil {
 			return nil, err
 		}
