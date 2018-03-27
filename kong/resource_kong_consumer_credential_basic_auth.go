@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"crypto/sha1"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
+	"io"
+	"strings"
 )
 
 type BasicAuthCredential struct {
@@ -42,7 +45,14 @@ func resourceKongBasicAuthCredential() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
+				Sensitive:   true,
 				Description: "The password to use in the Basic Authentication.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					sha1 := sha1.New()
+					io.WriteString(sha1, new)
+					io.WriteString(sha1, d.Get("consumer").(string))
+					return strings.TrimSpace(old) == fmt.Sprintf("%x", sha1.Sum(nil))
+				},
 			},
 
 			"consumer": &schema.Schema{
@@ -134,7 +144,6 @@ func resourceKongBasicAuthCredentialDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-//TODO: pasword should be SHA1 hashed to avoid differences on refresh - https://github.com/Mashape/kong/blob/master/kong/plugins/basic-auth/crypto.lua
 func getBasicAuthCredentialFromResourceData(d *schema.ResourceData) *BasicAuthCredential {
 	basicAuthCredential := &BasicAuthCredential{
 		Username: d.Get("username").(string),
@@ -149,7 +158,6 @@ func getBasicAuthCredentialFromResourceData(d *schema.ResourceData) *BasicAuthCr
 	return basicAuthCredential
 }
 
-//TODO: pasword should be SHA1 hashed to avoid differences on refresh - https://github.com/Mashape/kong/blob/master/kong/plugins/basic-auth/crypto.lua
 func setBasicAuthCredentialToResourceData(d *schema.ResourceData, basicAuthCredential *BasicAuthCredential) {
 	d.SetId(basicAuthCredential.ID)
 	d.Set("username", basicAuthCredential.Username)
