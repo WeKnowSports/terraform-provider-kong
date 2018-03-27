@@ -23,11 +23,11 @@ func resourceKongCertificate() *schema.Resource {
 		Delete: resourceKongCertificateDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cert": &schema.Schema{
+			"cert": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "PEM-encoded public certificate of the SSL key pair.",
@@ -35,7 +35,7 @@ func resourceKongCertificate() *schema.Resource {
 					return strings.TrimSpace(old) == strings.TrimSpace(new)
 				},
 			},
-			"key": &schema.Schema{
+			"key": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,

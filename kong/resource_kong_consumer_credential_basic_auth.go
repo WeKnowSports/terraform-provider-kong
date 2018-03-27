@@ -30,18 +30,18 @@ func resourceKongBasicAuthCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"username": &schema.Schema{
+			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The username to use in the Basic Authentication.",
 			},
 
-			"password": &schema.Schema{
+			"password": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
@@ -55,7 +55,7 @@ func resourceKongBasicAuthCredential() *schema.Resource {
 				},
 			},
 
-			"consumer": &schema.Schema{
+			"consumer": {
 				Type:     schema.TypeString,
 				Required: true,
 			},

@@ -21,17 +21,17 @@ func resourceKongTarget() *schema.Resource {
 		Delete: resourceKongTargetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"upstream": &schema.Schema{
+			"upstream": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The unique identifier or the name of the upstream to which to add the target.",
 				ForceNew:    true,
 			},
-			"target": &schema.Schema{
+			"target": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The target address (ip or hostname) and port. If omitted the port defaults to 8000. If the hostname resolves to an SRV record, the port value will overridden by the value from the dns record.",

@@ -21,12 +21,12 @@ func resourceKongSNI() *schema.Resource {
 		Delete: resourceKongSNIDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The SNI name to associate with the given sni.",
 			},
-			"ssl_certificate_id": &schema.Schema{
+			"ssl_certificate_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The id (a UUID) of the certificate with which to associate the SNI hostname.",

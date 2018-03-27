@@ -21,11 +21,11 @@ func resourceKongUpstream() *schema.Resource {
 		Delete: resourceKongUpstreamDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "This is a hostname, which must be equal to the host of a Service.",

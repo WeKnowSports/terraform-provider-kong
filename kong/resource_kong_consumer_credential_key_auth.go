@@ -26,19 +26,19 @@ func resourceKongKeyAuthCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"key": &schema.Schema{
+			"key": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Default:     nil,
 				Description: "The key to use in the Key Authentication.",
 			},
 
-			"consumer": &schema.Schema{
+			"consumer": {
 				Type:     schema.TypeString,
 				Required: true,
 			},

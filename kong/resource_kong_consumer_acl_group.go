@@ -22,16 +22,16 @@ func resourceKongConsumerACLGroup() *schema.Resource {
 		Delete: resourceKongConsumerACLGroupDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"group": &schema.Schema{
+			"group": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The arbitrary group name to associate to the consumer.",
 			},
-			"consumer": &schema.Schema{
+			"consumer": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
