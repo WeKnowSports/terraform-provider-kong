@@ -37,6 +37,8 @@ func Provider() terraform.ResourceProvider {
 			"kong_consumer_acl_group":             resourceKongConsumerACLGroup(),
 			"kong_certificate":                    resourceKongCertificate(),
 			"kong_sni":                            resourceKongSNI(),
+			"kong_upstream":                       resourceKongUpstream(),
+			"kong_target":                         resourceKongTarget(),
 		},
 
 		ConfigureFunc: providerConfigure,
