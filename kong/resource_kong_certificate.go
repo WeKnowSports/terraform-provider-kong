@@ -23,10 +23,6 @@ func resourceKongCertificate() *schema.Resource {
 		Delete: resourceKongCertificateDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"cert": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -131,12 +127,9 @@ func resourceKongCertificateDelete(d *schema.ResourceData, meta interface{}) err
 
 func getCertificateFromResourceData(d *schema.ResourceData) *Certificate {
 	certificate := &Certificate{
+		ID:   d.Id(),
 		Cert: d.Get("cert").(string),
 		Key:  d.Get("key").(string),
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		certificate.ID = id.(string)
 	}
 
 	return certificate
