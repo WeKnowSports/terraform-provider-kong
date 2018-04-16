@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"crypto/sha1"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
+	"io"
+	"strings"
 )
 
 type BasicAuthCredential struct {
@@ -44,6 +47,12 @@ func resourceKongBasicAuthCredential() *schema.Resource {
 				Default:     nil,
 				Sensitive:   true,
 				Description: "The password to use in the Basic Authentication.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					sha1 := sha1.New()
+					io.WriteString(sha1, new)
+					io.WriteString(sha1, d.Get("consumer").(string))
+					return strings.TrimSpace(old) == fmt.Sprintf("%x", sha1.Sum(nil))
+				},
 			},
 
 			"consumer": &schema.Schema{
