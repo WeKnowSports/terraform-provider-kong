@@ -29,11 +29,6 @@ func resourceKongKeyAuthPlugin() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"key_names": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -153,15 +148,12 @@ func resourceKeyAuthPluginDelete(d *schema.ResourceData, meta interface{}) error
 
 func getKeyAuthPluginFromResourceData(d *schema.ResourceData) *KeyAuthPlugin {
 	plugin := &KeyAuthPlugin{
+		ID:              d.Id(),
 		Name:            "key-auth",
 		KeyNames:        d.Get("key_names").(string),
 		HideCredentials: d.Get("hide_credentials").(bool),
 		Anonymous:       d.Get("anonymous").(string),
 		API:             d.Get("api").(string),
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		plugin.ID = id.(string)
 	}
 
 	return plugin

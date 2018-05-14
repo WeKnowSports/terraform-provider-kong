@@ -29,11 +29,6 @@ func resourceKongJWTCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -153,15 +148,12 @@ func resourceKongJWTCredentialDelete(d *schema.ResourceData, meta interface{}) e
 
 func getJWTCredentialFromResourceData(d *schema.ResourceData) *JWTCredential {
 	jwtCredential := &JWTCredential{
+		ID:           d.Id(),
 		Key:          d.Get("key").(string),
 		Algorithm:    d.Get("algorithm").(string),
 		RSAPublicKey: d.Get("rsa_public_key").(string),
 		Secret:       d.Get("secret").(string),
 		Consumer:     d.Get("consumer").(string),
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		jwtCredential.ID = id.(string)
 	}
 
 	return jwtCredential

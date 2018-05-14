@@ -29,11 +29,6 @@ func resourceKongPlugin() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"consumer": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -164,14 +159,11 @@ func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
 	plugin := &Plugin{
+		ID:            d.Id(),
 		Name:          d.Get("name").(string),
 		Configuration: d.Get("config").(map[string]interface{}),
 		API:           d.Get("api").(string),
 		Consumer:      d.Get("consumer").(string),
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		plugin.ID = id.(string)
 	}
 
 	return plugin

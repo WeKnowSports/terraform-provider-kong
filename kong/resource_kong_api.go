@@ -57,11 +57,6 @@ func resourceKongAPI() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -180,7 +175,7 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 func resourceKongAPIRead(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	id := d.Get("id").(string)
+	id := d.Id()
 	api := new(APIResponse)
 
 	response, error := sling.New().Path("apis/").Get(id).ReceiveSuccess(api)
@@ -226,7 +221,7 @@ func resourceKongAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	id := d.Get("id").(string)
+	id := d.Id()
 
 	response, error := sling.New().Delete("apis/").Path(id).ReceiveSuccess(nil)
 	if error != nil {
@@ -242,6 +237,7 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getAPIFromResourceData(d *schema.ResourceData) *APIRequest {
 	api := &APIRequest{
+		ID:                     d.Id(),
 		Name:                   d.Get("name").(string),
 		Hosts:                  d.Get("hosts").(string),
 		Uris:                   d.Get("uris").(string),
@@ -255,10 +251,6 @@ func getAPIFromResourceData(d *schema.ResourceData) *APIRequest {
 		UpstreamReadTimeout:    d.Get("upstream_read_timeout").(int),
 		HTTPSOnly:              d.Get("https_only").(bool),
 		HTTPIfTerminated:       d.Get("http_if_terminated").(bool),
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		api.ID = id.(string)
 	}
 
 	return api

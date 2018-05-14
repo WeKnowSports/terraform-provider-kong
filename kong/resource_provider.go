@@ -23,6 +23,12 @@ func Provider() terraform.ResourceProvider {
 				Optional: true,
 				Default:  "",
 			},
+			"jwt": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "User supplied JWT token for authentication with Kong",
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -50,6 +56,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Address:  d.Get("address").(string),
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
+		JWT: d.Get("jwt").(string),
 	}
 
 	return config.Client()
