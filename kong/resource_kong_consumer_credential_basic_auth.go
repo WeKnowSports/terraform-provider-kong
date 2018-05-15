@@ -30,18 +30,18 @@ func resourceKongBasicAuthCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"id": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"username": {
+			"username": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The username to use in the Basic Authentication.",
 			},
 
-			"password": {
+			"password": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
@@ -55,7 +55,7 @@ func resourceKongBasicAuthCredential() *schema.Resource {
 				},
 			},
 
-			"consumer": {
+			"consumer": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -70,13 +70,14 @@ func resourceKongBasicAuthCredentialCreate(d *schema.ResourceData, meta interfac
 
 	createdBasicAuthCredential := getBasicAuthCredentialFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer + "/").Post("basic-auth/").ReceiveSuccess(createdBasicAuthCredential)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer+"/").Post("basic-auth/").Receive(createdBasicAuthCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while creating basicAuthCredential.")
 	}
 
 	if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setBasicAuthCredentialToResourceData(d, createdBasicAuthCredential)
@@ -89,7 +90,8 @@ func resourceKongBasicAuthCredentialRead(d *schema.ResourceData, meta interface{
 
 	basicAuthCredential := getBasicAuthCredentialFromResourceData(d)
 
-	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer + "/").Path("basic-auth/").Get(basicAuthCredential.ID).ReceiveSuccess(basicAuthCredential)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer+"/").Path("basic-auth/").Get(basicAuthCredential.ID).Receive(basicAuthCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating basicAuthCredential.")
 	}
@@ -98,7 +100,7 @@ func resourceKongBasicAuthCredentialRead(d *schema.ResourceData, meta interface{
 		d.SetId("")
 		return nil
 	} else if response.StatusCode != http.StatusOK {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setBasicAuthCredentialToResourceData(d, basicAuthCredential)
@@ -113,13 +115,14 @@ func resourceKongBasicAuthCredentialUpdate(d *schema.ResourceData, meta interfac
 
 	updatedBasicAuthCredential := getBasicAuthCredentialFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer + "/").Patch("basic-auth/").Path(basicAuthCredential.ID).ReceiveSuccess(updatedBasicAuthCredential)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer+"/").Patch("basic-auth/").Path(basicAuthCredential.ID).Receive(updatedBasicAuthCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating basicAuthCredential.")
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setBasicAuthCredentialToResourceData(d, updatedBasicAuthCredential)
@@ -132,13 +135,14 @@ func resourceKongBasicAuthCredentialDelete(d *schema.ResourceData, meta interfac
 
 	basicAuthCredential := getBasicAuthCredentialFromResourceData(d)
 
-	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer + "/").Path("basic-auth/").Delete(basicAuthCredential.ID).ReceiveSuccess(nil)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer+"/").Path("basic-auth/").Delete(basicAuthCredential.ID).Receive(nil, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while deleting basicAuthCredential.")
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	return nil

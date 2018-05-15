@@ -29,40 +29,41 @@ func resourceKongJWTCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"id": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"key": {
+			"key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "TA unique string identifying the credential. If left out, it will be auto-generated.",
 			},
 
-			"algorithm": {
+			"algorithm": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "The algorithm used to verify the token's signature. Can be HS256 or RS256.",
 			},
 
-			"rsa_public_key": {
+			"rsa_public_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "If algorithm is RS256, the public key (in PEM format) to use to verify the token's signature.",
 			},
 
-			"secret": {
+			"secret": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
+				Sensitive:   true,
 				Description: "If algorithm is HS256, the secret used to sign JWTs for this credential. If left out, will be auto-generated.",
 			},
 
-			"consumer": {
+			"consumer": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -77,13 +78,14 @@ func resourceKongJWTCredentialCreate(d *schema.ResourceData, meta interface{}) e
 
 	createdJWTCredential := getJWTCredentialFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(jwtCredential).Path("consumers/").Path(jwtCredential.Consumer + "/").Post("jwt/").ReceiveSuccess(createdJWTCredential)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().BodyJSON(jwtCredential).Path("consumers/").Path(jwtCredential.Consumer+"/").Post("jwt/").Receive(createdJWTCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while creating jwtCredential.")
 	}
 
 	if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setJWTCredentialToResourceData(d, createdJWTCredential)
@@ -96,7 +98,8 @@ func resourceKongJWTCredentialRead(d *schema.ResourceData, meta interface{}) err
 
 	jwtCredential := getJWTCredentialFromResourceData(d)
 
-	response, error := sling.New().Path("consumers/").Path(jwtCredential.Consumer + "/").Path("jwt/").Get(jwtCredential.ID).ReceiveSuccess(jwtCredential)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("consumers/").Path(jwtCredential.Consumer+"/").Path("jwt/").Get(jwtCredential.ID).Receive(jwtCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating jwtCredential.")
 	}
@@ -105,7 +108,7 @@ func resourceKongJWTCredentialRead(d *schema.ResourceData, meta interface{}) err
 		d.SetId("")
 		return nil
 	} else if response.StatusCode != http.StatusOK {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setJWTCredentialToResourceData(d, jwtCredential)
@@ -120,13 +123,14 @@ func resourceKongJWTCredentialUpdate(d *schema.ResourceData, meta interface{}) e
 
 	updatedJWTCredential := getJWTCredentialFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(jwtCredential).Path("consumers/").Path(jwtCredential.Consumer + "/").Patch("jwt/").Path(jwtCredential.ID).ReceiveSuccess(updatedJWTCredential)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().BodyJSON(jwtCredential).Path("consumers/").Path(jwtCredential.Consumer+"/").Patch("jwt/").Path(jwtCredential.ID).Receive(updatedJWTCredential, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating jwtCredential.")
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setJWTCredentialToResourceData(d, updatedJWTCredential)
@@ -139,13 +143,14 @@ func resourceKongJWTCredentialDelete(d *schema.ResourceData, meta interface{}) e
 
 	jwtCredential := getJWTCredentialFromResourceData(d)
 
-	response, error := sling.New().Path("consumers/").Path(jwtCredential.Consumer + "/").Path("jwt/").Delete(jwtCredential.ID).ReceiveSuccess(nil)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("consumers/").Path(jwtCredential.Consumer+"/").Path("jwt/").Delete(jwtCredential.ID).Receive(nil, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while deleting jwtCredential.")
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	return nil

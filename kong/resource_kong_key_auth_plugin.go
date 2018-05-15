@@ -29,33 +29,33 @@ func resourceKongKeyAuthPlugin() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"id": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"key_names": {
+			"key_names": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Default:     nil,
 				Description: "The name of the API key header to use.",
 			},
 
-			"hide_credentials": {
+			"hide_credentials": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     nil,
 				Description: "Whether credentials should be hidden.",
 			},
 
-			"anonymous": {
+			"anonymous": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "String (consumer UUID) to use as an anonymous 'consumer', if authentication fails.",
 			},
 
-			"api": {
+			"api": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  nil,
@@ -75,7 +75,8 @@ func resourceKeyAuthPluginCreate(d *schema.ResourceData, meta interface{}) error
 	if plugin.API != "" {
 		request = request.Path("apis/").Path(plugin.API + "/")
 	}
-	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
+	errorResponse := make(map[string]interface{})
+	response, error := request.Post("plugins/").Receive(createdPlugin, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while creating plugin.")
 	}
@@ -83,7 +84,7 @@ func resourceKeyAuthPluginCreate(d *schema.ResourceData, meta interface{}) error
 	if response.StatusCode == http.StatusConflict {
 		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
 	} else if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setKeyAuthPluginFromResourceData(d, createdPlugin)
@@ -96,7 +97,8 @@ func resourceKeyAuthPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	plugin := getKeyAuthPluginFromResourceData(d)
 
-	response, error := sling.New().Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("plugins/").Get(plugin.ID).Receive(plugin, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating plugin.")
 	}
@@ -105,7 +107,7 @@ func resourceKeyAuthPluginRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	} else if response.StatusCode != http.StatusOK {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setKeyAuthPluginFromResourceData(d, plugin)
@@ -120,13 +122,14 @@ func resourceKeyAuthPluginUpdate(d *schema.ResourceData, meta interface{}) error
 
 	updatedPlugin := getKeyAuthPluginFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).Receive(updatedPlugin, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while updating plugin.")
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setKeyAuthPluginFromResourceData(d, updatedPlugin)
@@ -139,13 +142,14 @@ func resourceKeyAuthPluginDelete(d *schema.ResourceData, meta interface{}) error
 
 	plugin := getKeyAuthPluginFromResourceData(d)
 
-	response, error := sling.New().Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("plugins/").Delete(plugin.ID).Receive(nil, &errorResponse)
 	if error != nil {
 		return fmt.Errorf("Error while deleting plugin.")
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf(response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	return nil

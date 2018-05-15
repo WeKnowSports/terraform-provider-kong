@@ -27,22 +27,7 @@ type APIRequest struct {
 	HTTPIfTerminated       bool   `json:"http_if_terminated"`
 }
 
-// APIResponse : Kong API response object structure
-type APIResponse struct {
-	ID                     string   `json:"id,omitempty"`
-	Name                   string   `json:"name"`
-	Hosts                  []string `json:"hosts,omitempty"`
-	Uris                   []string `json:"uris,omitempty"`
-	Methods                []string `json:"methods,omitempty"`
-	UpstreamURL            string   `json:"upstream_url"`
-	StripURI               bool     `json:"strip_uri"`
-	PreserveHost           bool     `json:"preserve_host"`
-	Retries                int      `json:"retries,omitempty"`
-	UpstreamConnectTimeout int      `json:"upstream_connect_timeout,omitempty"`
-	UpstreamSendTimeout    int      `json:"upstream_send_timeout,omitempty"`
-	UpstreamReadTimeout    int      `json:"upstream_read_timeout,omitempty"`
-	HTTPSOnly              bool     `json:"https_only"`
-	HTTPIfTerminated       bool     `json:"http_if_terminated"`
+type APICreateError struct {
 }
 
 func resourceKongAPI() *schema.Resource {
@@ -57,94 +42,94 @@ func resourceKongAPI() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"id": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"name": {
+			"name": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The API name.",
 			},
 
-			"hosts": {
+			"hosts": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "A comma-separated list of domain names that point to your API. For example: example.com. At least one of hosts, uris, or methods should be specified.",
 			},
 
-			"uris": {
+			"uris": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "A comma-separated list of URIs prefixes that point to your API. For example: /my-path. At least one of hosts, uris, or methods should be specified",
 			},
 
-			"methods": {
+			"methods": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "A comma-separated list of HTTP methods that point to your API. For example: GET,POST. At least one of hosts, uris, or methods should be specified.",
 			},
 
-			"upstream_url": {
+			"upstream_url": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The base target URL that points to your API server. This URL will be used for proxying requests. For example: https://example.com.",
 			},
 
-			"strip_uri": {
+			"strip_uri": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
 				Description: "When matching an API via one of the uris prefixes, strip that matching prefix from the upstream URI to be requested. Default: true.",
 			},
 
-			"preserve_host": {
+			"preserve_host": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "When matching an API via one of the hosts domain names, make sure the request Host header is forwarded to the upstream service. By default, this is false, and the upstream Host header will be extracted from the configured upstream_url.",
 			},
 
-			"retries": {
+			"retries": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     5,
 				Description: "A comma-separated list of HTTP methods that point to your API. For example: GET,POST. At least one of hosts, uris, or methods should be specified.",
 			},
 
-			"upstream_connect_timeout": {
+			"upstream_connect_timeout": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     60000,
 				Description: "The timeout in milliseconds for establishing a connection to your upstream service. Defaults to 60000.",
 			},
 
-			"upstream_send_timeout": {
+			"upstream_send_timeout": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     60000,
 				Description: "The timeout in milliseconds between two successive write operations for transmitting a request to your upstream service Defaults to 60000.",
 			},
 
-			"upstream_read_timeout": {
+			"upstream_read_timeout": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     60000,
 				Description: "The timeout in milliseconds between two successive read operations for transmitting a request to your upstream service Defaults to 60000.",
 			},
 
-			"https_only": {
+			"https_only": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     nil,
 				Description: "To be enabled if you wish to only serve an API through HTTPS, on the appropriate port (8443 by default). Default: false.",
 			},
 
-			"http_if_terminated": {
+			"http_if_terminated": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
@@ -160,7 +145,8 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	api := getAPIFromResourceData(d)
 
 	createdAPI := new(APIResponse)
-	response, error := sling.New().BodyJSON(api).Post("apis/").ReceiveSuccess(createdAPI)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().BodyJSON(api).Post("apis/").Receive(createdAPI, &errorResponse)
 
 	if error != nil {
 		return fmt.Errorf("error while creating API: " + error.Error())
@@ -169,7 +155,7 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	if response.StatusCode == http.StatusConflict {
 		return fmt.Errorf("409 Conflict - use terraform import to manage this api.")
 	} else if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setAPIToResourceData(d, createdAPI)
@@ -183,17 +169,18 @@ func resourceKongAPIRead(d *schema.ResourceData, meta interface{}) error {
 	id := d.Get("id").(string)
 	api := new(APIResponse)
 
-	response, error := sling.New().Path("apis/").Get(id).ReceiveSuccess(api)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Path("apis/").Get(id).Receive(api, &errorResponse)
 
 	if error != nil {
-		return fmt.Errorf("error while updating API" + error.Error())
+		return fmt.Errorf("error while reading API: %v", error.Error())
 	}
 
 	if response.StatusCode == http.StatusNotFound {
 		d.SetId("")
 		return nil
 	} else if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setAPIToResourceData(d, api)
@@ -207,15 +194,15 @@ func resourceKongAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	api := getAPIFromResourceData(d)
 
 	updatedAPI := new(APIResponse)
-
-	response, error := sling.New().BodyJSON(api).Patch("apis/").Path(api.ID).ReceiveSuccess(updatedAPI)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().BodyJSON(api).Patch("apis/").Path(api.ID).Receive(updatedAPI, &errorResponse)
 
 	if error != nil {
-		return fmt.Errorf("error while updating API" + error.Error())
+		return fmt.Errorf("error while updating API: %v", error.Error())
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	setAPIToResourceData(d, updatedAPI)
@@ -228,13 +215,14 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 
 	id := d.Get("id").(string)
 
-	response, error := sling.New().Delete("apis/").Path(id).ReceiveSuccess(nil)
+	errorResponse := make(map[string]interface{})
+	response, error := sling.New().Delete("apis/").Path(id).Receive(nil, &errorResponse)
 	if error != nil {
-		return fmt.Errorf("error while deleting API" + error.Error())
+		return fmt.Errorf("error while deleting API: %v", error.Error())
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return ErrorFromResponse(response, errorResponse)
 	}
 
 	return nil
@@ -267,9 +255,9 @@ func getAPIFromResourceData(d *schema.ResourceData) *APIRequest {
 func setAPIToResourceData(d *schema.ResourceData, api *APIResponse) {
 	d.SetId(api.ID)
 	d.Set("name", api.Name)
-	d.Set("hosts", api.Hosts)
+	d.Set("hosts", strings.Join(api.Hosts, ","))
 	d.Set("uris", strings.Join(api.Uris, ","))
-	d.Set("methods", api.Methods)
+	d.Set("methods", strings.Join(api.Methods, ","))
 	d.Set("upstream_url", api.UpstreamURL)
 	d.Set("strip_uri", api.StripURI)
 	d.Set("preserve_host", api.PreserveHost)
