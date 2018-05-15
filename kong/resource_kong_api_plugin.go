@@ -31,6 +31,11 @@ func resourceKongPlugin() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"id": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"consumer": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,

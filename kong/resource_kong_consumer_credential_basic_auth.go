@@ -148,7 +148,6 @@ func resourceKongBasicAuthCredentialDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-//TODO: pasword should be SHA1 hashed to avoid differences on refresh - https://github.com/Mashape/kong/blob/master/kong/plugins/basic-auth/crypto.lua
 func getBasicAuthCredentialFromResourceData(d *schema.ResourceData) *BasicAuthCredential {
 	basicAuthCredential := &BasicAuthCredential{
 		Username: d.Get("username").(string),
@@ -163,7 +162,6 @@ func getBasicAuthCredentialFromResourceData(d *schema.ResourceData) *BasicAuthCr
 	return basicAuthCredential
 }
 
-//TODO: pasword should be SHA1 hashed to avoid differences on refresh - https://github.com/Mashape/kong/blob/master/kong/plugins/basic-auth/crypto.lua
 func setBasicAuthCredentialToResourceData(d *schema.ResourceData, basicAuthCredential *BasicAuthCredential) {
 	d.SetId(basicAuthCredential.ID)
 	d.Set("username", basicAuthCredential.Username)
