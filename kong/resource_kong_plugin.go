@@ -8,12 +8,13 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-// Plugin : Kong API plugin request object structure
+// Plugin : Kong Service/API plugin request object structure
 type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
 	API           string                 `json:"-"`
+	Service       string                 `json:"-"`
 	Consumer      string                 `json:"consumer_id,omitempty"`
 }
 
@@ -56,6 +57,13 @@ func resourceKongPlugin() *schema.Resource {
 			},
 
 			"api": {
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Use service instead.",
+				Default:    nil,
+			},
+
+			"service": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  nil,
@@ -74,7 +82,10 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	request := sling.New().BodyJSON(plugin)
 	if plugin.API != "" {
 		request = request.Path("apis/").Path(plugin.API + "/")
+	} else if plugin.Service != "" {
+		request = request.Path("services/").Path(plugin.Service + "/")
 	}
+
 	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
 	if error != nil {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
