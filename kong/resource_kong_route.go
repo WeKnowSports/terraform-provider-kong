@@ -14,7 +14,7 @@ type Route struct {
 	Methods      []string `json:"methods,omitempty"`
 	Hosts        []string `json:"hosts,omitempty"`
 	Paths        []string `json:"paths,omitempty"`
-	StripPath    bool     `json:"string_path,omitempty"`
+	StripPath    bool     `json:"strip_path,omitempty"`
 	PreserveHost bool     `json:"preserve_host,omitempty"`
 	Service      Service  `json:"service,omitempty"`
 }
@@ -38,20 +38,30 @@ func resourceKongRoute() *schema.Resource {
 
 			"protocols": {
 				Type:        schema.TypeList,
-				Elem:        schema.TypeString,
-				Description: "A list of HTTP methods that match this Route. For example: [\"GET\", \"POST\"]",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "A list of the protocols this Route should allow. By default it is [\"http\", \"https\"], which means that the Route accepts both. When set to [\"https\"], HTTP requests are answered with a request to upgrade to HTTPS.",
+			},
+
+			"methods": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Default:     nil,
+				Description: "A list of HTTP methods that match this Route. For example: [\"GET\", \"POST\"]. At least one of hosts, paths, or methods must be set.",
 			},
 
 			"hosts": {
 				Type:        schema.TypeList,
-				Elem:        schema.TypeString,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Default:     nil,
 				Description: "A list of domain names that match this Route. For example: example.com. At least one of hosts, paths, or methods must be set.",
 			},
 
 			"paths": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Default:     nil,
 				Description: "A list of paths that match this Route. For example: /my-path. At least one of hosts, paths, or methods must be set.",
@@ -175,10 +185,10 @@ func resourceKongRouteDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getRouteFromResourceData(d *schema.ResourceData) *Route {
 	route := &Route{
-		Protocols:    d.Get("protocols").([]string),
-		Methods:      d.Get("methods").([]string),
-		Hosts:        d.Get("hosts").([]string),
-		Paths:        d.Get("paths").([]string),
+		Protocols:    convertInterfaceArrToStrings(d.Get("protocols").([]interface{})),
+		Methods:      convertInterfaceArrToStrings(d.Get("methods").([]interface{})),
+		Hosts:        convertInterfaceArrToStrings(d.Get("hosts").([]interface{})),
+		Paths:        convertInterfaceArrToStrings(d.Get("paths").([]interface{})),
 		StripPath:    d.Get("strip_path").(bool),
 		PreserveHost: d.Get("preserve_host").(bool),
 		Service: Service{
@@ -202,4 +212,12 @@ func setRouteToResourceData(d *schema.ResourceData, route *Route) {
 	d.Set("strip_path", route.StripPath)
 	d.Set("preserve_host", route.PreserveHost)
 	d.Set("service", route.Service.ID)
+}
+
+func convertInterfaceArrToStrings(strs []interface{}) []string {
+	arr := make([]string, len(strs))
+	for i, str := range strs {
+		arr[i] = str.(string)
+	}
+	return arr
 }

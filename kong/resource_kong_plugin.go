@@ -15,6 +15,7 @@ type Plugin struct {
 	Configuration map[string]interface{} `json:"config,omitempty"`
 	API           string                 `json:"-"`
 	Service       string                 `json:"-"`
+	Route         string                 `json:"-"`
 	Consumer      string                 `json:"consumer_id,omitempty"`
 }
 
@@ -57,16 +58,25 @@ func resourceKongPlugin() *schema.Resource {
 			},
 
 			"api": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Use service instead.",
-				Default:    nil,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Deprecated:    "Use service or route instead.",
+				Default:       nil,
+				ConflictsWith: []string{"service", "route"},
 			},
 
 			"service": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  nil,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       nil,
+				ConflictsWith: []string{"api", "route"},
+			},
+
+			"route": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       nil,
+				ConflictsWith: []string{"api", "service"},
 			},
 		},
 	}
@@ -84,6 +94,8 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 		request = request.Path("apis/").Path(plugin.API + "/")
 	} else if plugin.Service != "" {
 		request = request.Path("services/").Path(plugin.Service + "/")
+	} else if plugin.Route != "" {
+		request = request.Path("routes/").Path(plugin.Route + "/")
 	}
 
 	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)

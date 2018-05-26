@@ -19,7 +19,7 @@ type Service struct {
 	ConnectTimeout int    `json:"connect_timeout,omitempty"`
 	WriteTimeout   int    `json:"write_timeout,omitempty"`
 	ReadTimeout    int    `json:"read_timeout,omitempty"`
-	Url            string `json:"url,omitempty"`
+	Url            string `json:"-"`
 }
 
 func resourceKongService() *schema.Resource {
@@ -41,33 +41,35 @@ func resourceKongService() *schema.Resource {
 
 			"name": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Default:     nil,
 				Description: "The Service name.",
 			},
 
 			"protocol": {
 				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "http",
 				Description: "The protocol used to communicate with the upstream. It can be one of http (default) or https.",
 			},
 
 			"host": {
 				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     nil,
+				Required:    true,
 				Description: "The host of the upstream server.",
 			},
 
 			"port": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     nil,
+				Default:     80,
 				Description: "The upstream server port. Defaults to 80.",
 			},
 
 			"path": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     nil,
+				Default:     "",
 				Description: "The path to be used in requests to the upstream server. Empty by default.",
 			},
 
@@ -198,10 +200,10 @@ func resourceKongServiceDelete(d *schema.ResourceData, meta interface{}) error {
 func getServiceFromResourceData(d *schema.ResourceData) *Service {
 	service := &Service{
 		Name:           d.Get("name").(string),
-		Protocol:       d.Get("hosts").(string),
-		Host:           d.Get("uris").(string),
+		Protocol:       d.Get("protocol").(string),
+		Host:           d.Get("host").(string),
 		Port:           d.Get("port").(int),
-		Path:           d.Get("upstream_url").(string),
+		Path:           d.Get("path").(string),
 		Retries:        d.Get("retries").(int),
 		ConnectTimeout: d.Get("connect_timeout").(int),
 		WriteTimeout:   d.Get("write_timeout").(int),
