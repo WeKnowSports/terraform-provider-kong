@@ -40,6 +40,15 @@ func resourceKongRoute() *schema.Resource {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				Default:     nil,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					protocols := convertInterfaceArrToStrings(d.Get("protocols").([]interface{}))
+
+					// TODO: Yeah...
+					return len(protocols) == 2 &&
+						((protocols[0] == "http" && protocols[1] == "https") ||
+						(protocols[0] == "https" && protocols[1] == "http"))
+				},
 				Description: "A list of the protocols this Route should allow. By default it is [\"http\", \"https\"], which means that the Route accepts both. When set to [\"https\"], HTTP requests are answered with a request to upgrade to HTTPS.",
 			},
 
