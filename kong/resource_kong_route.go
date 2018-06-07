@@ -14,8 +14,8 @@ type Route struct {
 	Methods      []string `json:"methods,omitempty"`
 	Hosts        []string `json:"hosts,omitempty"`
 	Paths        []string `json:"paths,omitempty"`
-	StripPath    bool     `json:"strip_path,omitempty"`
-	PreserveHost bool     `json:"preserve_host,omitempty"`
+	StripPath    bool     `json:"strip_path"`
+	PreserveHost bool     `json:"preserve_host"`
 	Service      Service  `json:"service,omitempty"`
 }
 
