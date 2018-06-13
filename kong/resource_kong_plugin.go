@@ -17,6 +17,7 @@ type Plugin struct {
 	Service       string                 `json:"service_id,omitempty"`
 	Route         string                 `json:"route_id,omitempty"`
 	Consumer      string                 `json:"consumer_id,omitempty"`
+	CreatedAt     int                    `json:"created_at,omitempty"`
 }
 
 func resourceKongPlugin() *schema.Resource {
@@ -69,14 +70,19 @@ func resourceKongPlugin() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Default:       nil,
-				ConflictsWith: []string{"api", "route"},
+				ConflictsWith: []string{"api"},
 			},
 
 			"route": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Default:       nil,
-				ConflictsWith: []string{"api", "service"},
+				ConflictsWith: []string{"api"},
+			},
+
+			"created_at": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 	}
@@ -143,7 +149,7 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	updatedPlugin := getPluginFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
+	response, error := sling.New().BodyJSON(plugin).Put("plugins/").ReceiveSuccess(updatedPlugin)
 	if error != nil {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
@@ -190,6 +196,10 @@ func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
 		plugin.ID = id.(string)
 	}
 
+	if createdAt, ok := d.GetOk("created_at"); ok {
+		plugin.CreatedAt = createdAt.(int)
+	}
+
 	return plugin
 }
 
@@ -201,4 +211,5 @@ func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
 	d.Set("consumer", plugin.Consumer)
 	d.Set("serivce", plugin.Service)
 	d.Set("route", plugin.Route)
+	d.Set("created_at", plugin.CreatedAt)
 }
