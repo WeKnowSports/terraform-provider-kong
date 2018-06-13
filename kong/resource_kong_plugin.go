@@ -13,9 +13,9 @@ type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
-	API           string                 `json:"-"`
-	Service       string                 `json:"-"`
-	Route         string                 `json:"-"`
+	API           string                 `json:"api_id,omitempty"`
+	Service       string                 `json:"service_id,omitempty"`
+	Route         string                 `json:"route_id,omitempty"`
 	Consumer      string                 `json:"consumer_id,omitempty"`
 }
 
@@ -89,22 +89,13 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 
 	createdPlugin := getPluginFromResourceData(d)
 
-	request := sling.New().BodyJSON(plugin)
-	if plugin.API != "" {
-		request = request.Path("apis/").Path(plugin.API + "/")
-	} else if plugin.Service != "" {
-		request = request.Path("services/").Path(plugin.Service + "/")
-	} else if plugin.Route != "" {
-		request = request.Path("routes/").Path(plugin.Route + "/")
-	}
-
-	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
+	response, error := sling.New().BodyJSON(plugin).Post("plugins/").ReceiveSuccess(createdPlugin)
 	if error != nil {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
 
 	if response.StatusCode == http.StatusConflict {
-		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
+		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin")
 	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
@@ -191,6 +182,8 @@ func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
 		Configuration: d.Get("config").(map[string]interface{}),
 		API:           d.Get("api").(string),
 		Consumer:      d.Get("consumer").(string),
+		Service:       d.Get("service").(string),
+		Route:         d.Get("route").(string),
 	}
 
 	if id, ok := d.GetOk("id"); ok {
@@ -206,4 +199,6 @@ func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
 	d.Set("config", plugin.Configuration)
 	d.Set("api", plugin.API)
 	d.Set("consumer", plugin.Consumer)
+	d.Set("serivce", plugin.Service)
+	d.Set("route", plugin.Route)
 }
