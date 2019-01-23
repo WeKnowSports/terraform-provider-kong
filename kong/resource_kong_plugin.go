@@ -190,6 +190,8 @@ func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
 		Name:          d.Get("name").(string),
 		Configuration: d.Get("config").(map[string]interface{}),
 		API:           d.Get("api").(string),
+		Service:       d.Get("service").(string),
+		Route:         d.Get("route").(string),
 		Consumer:      d.Get("consumer").(string),
 	}
 
@@ -205,5 +207,7 @@ func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
 	d.Set("name", plugin.Name)
 	d.Set("config", plugin.Configuration)
 	d.Set("api", plugin.API)
+	d.Set("service", plugin.Service)
+	d.Set("route", plugin.Route)
 	d.Set("consumer", plugin.Consumer)
 }
