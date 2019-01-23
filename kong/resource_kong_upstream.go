@@ -9,8 +9,15 @@ import (
 )
 
 type Upstream struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
+	ID                 string `json:"id,omitempty"`
+	Name               string `json:"name,omitempty"`
+	Slots              int    `json:"slots,omitempty"`
+	HashOn             string `json:"hash_on,omitempty"`
+	HashFallback       string `json:"hash_fallback,omitempty"`
+	HashOnHeader       string `json:"hash_on_header,omitempty"`
+	HashFallbackHeader string `json:"hash_fallback_header,omitempty"`
+	HashOnCookie       string `json:"hash_on_cookie,omitempty"`
+	HashOnCookiePath   string `json:"hash_on_cookie_path,omitempty"`
 }
 
 func resourceKongUpstream() *schema.Resource {
@@ -29,6 +36,65 @@ func resourceKongUpstream() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "This is a hostname, which must be equal to the host of a Service.",
+			},
+			"slots": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The number of slots in the loadbalancer algorithm (10-65536, defaults to 1000).",
+				Default:     1000,
+				ValidateFunc: func(i interface{}, s string) (strings []string, errors []error) {
+					slots := i.(int)
+
+					if slots >= 10 && slots <= 65536 {
+						return nil, nil
+					}
+
+					return nil, []error{fmt.Errorf("slots value of %d not in the range of 10-65536", slots)}
+				},
+			},
+			"hash_on": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "What to use as hashing input: none, consumer, ip, header, or cookie (defaults to none resulting in a weighted-round-robin scheme).",
+				Default:     "none",
+				ValidateFunc: func(i interface{}, s string) (strings []string, errors []error) {
+					// TODO: validate against [none, consume, ip, header, cookie]
+					return nil, nil
+				},
+			},
+			"hash_fallback": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "What to use as hashing input if the primary hash_on does not return a hash (eg. header is missing, or no consumer identified). One of: none, consumer, ip, header, or cookie (defaults to none, not available if hash_on is set to cookie).",
+				Default:     "none",
+				ValidateFunc: func(i interface{}, s string) (strings []string, errors []error) {
+					// TODO: validate against [none, consume, ip, header, cookie]
+					return nil, nil
+				},
+			},
+			"hash_on_header": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The header name to take the value from as hash input (only required when hash_on is set to header).",
+			},
+			"hash_fallback_header": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The header name to take the value from as hash input (only required when hash_fallback is set to header).",
+			},
+			"hash_on_cookie": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The cookie name to take the value from as hash input (only required when hash_on or hash_fallback is set to cookie). If the specified cookie is not in the request, Kong will generate a value and set the cookie in the response.",
+			},
+			"hash_on_cookie_path": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "/",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return (old == "" && new == "/") || (old == "/" && new == "")
+				},
+				Description: "The cookie path to set in the response headers (only required when hash_on or hash_fallback is set to cookie, defaults to \"/\")",
 			},
 		},
 	}
@@ -117,7 +183,14 @@ func resourceKongUpstreamDelete(d *schema.ResourceData, meta interface{}) error 
 
 func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 	upstream := &Upstream{
-		Name: d.Get("name").(string),
+		Name:  d.Get("name").(string),
+		Slots: d.Get("slots").(int),
+		HashOn:             d.Get("hash_on").(string),
+		HashFallback:       d.Get("hash_fallback").(string),
+		HashOnHeader:       d.Get("hash_on_header").(string),
+		HashFallbackHeader: d.Get("hash_fallback_header").(string),
+		HashOnCookie:       d.Get("hash_on_cookie").(string),
+		HashOnCookiePath:   d.Get("hash_on_cookie_path").(string),
 	}
 
 	if id, ok := d.GetOk("id"); ok {
@@ -130,4 +203,11 @@ func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 func setUpstreamToResourceData(d *schema.ResourceData, upstream *Upstream) {
 	d.SetId(upstream.ID)
 	d.Set("name", upstream.Name)
+	d.Set("slots", upstream.Slots)
+	d.Set("hash_on", upstream.HashOn)
+	d.Set("hash_fallback", upstream.HashFallback)
+	d.Set("hash_on_header", upstream.HashOnHeader)
+	d.Set("hash_fallback_header", upstream.HashFallbackHeader)
+	d.Set("hash_on_cookie", upstream.HashOnCookie)
+	d.Set("hash_on_cookie_path", upstream.HashOnCookiePath)
 }
