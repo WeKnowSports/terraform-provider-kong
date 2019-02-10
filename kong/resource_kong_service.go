@@ -19,7 +19,7 @@ type Service struct {
 	ConnectTimeout int    `json:"connect_timeout,omitempty"`
 	WriteTimeout   int    `json:"write_timeout,omitempty"`
 	ReadTimeout    int    `json:"read_timeout,omitempty"`
-	Url            string `json:"-"`
+	Url            string `json:"url,omitempty"`
 }
 
 func resourceKongService() *schema.Resource {
@@ -49,78 +49,102 @@ func resourceKongService() *schema.Resource {
 			"protocol": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "http",
 				Description: "The protocol used to communicate with the upstream. It can be one of http (default) or https.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return (new == "" && d.Get("url").(string) != "") || (old == "http" && (new == ""))
+				},
 			},
 
 			"host": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The host of the upstream server.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "" && d.Get("url").(string) != ""
+				},
 			},
 
 			"port": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     80,
 				Description: "The upstream server port. Defaults to 80.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "0" && d.Get("url").(string) != "" || (old == "80" && new == "0")
+				},
 			},
 
 			"path": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
 				Description: "The path to be used in requests to the upstream server. Empty by default.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "" && d.Get("url").(string) != ""
+				},
 			},
 
 			"retries": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     5,
 				Description: "A comma-separated list of HTTP methods that point to your Service. For example: GET,POST. At least one of hosts, uris, or methods should be specified.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "5" || new != old
+				},
 			},
 
 			"connect_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     60000,
 				Description: "The timeout in milliseconds for establishing a connection to the upstream server. Defaults to 60000.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "60000" || new != old
+				},
 			},
 
 			"write_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     60000,
 				Description: "The timeout in milliseconds between two successive write operations for transmitting a request to the upstream server. Defaults to 60000.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "60000" || new != old
+				},
 			},
 
 			"read_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     60000,
 				Description: "The timeout in milliseconds between two successive read operations for transmitting a request to the upstream server. Defaults to 60000.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "60000" || new != old
+				},
 			},
 
 			"url": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     nil,
 				Description: "Shorthand attribute to set protocol, host, port and path at once. This attribute is write-only (the Admin API never \"returns\" the url).",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					service := getServiceFromResourceData(d)
+
+					oldUrl := service.Protocol + "://" + service.Host + ":" + string(service.Port) + service.Path
+					oldUrlNoPort := service.Protocol + "://" + service.Host + service.Path
+
+					return new == oldUrl || new == oldUrlNoPort
+				},
 			},
 		},
 	}
 }
 
 func resourceKongServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	s := meta.(*sling.Sling)
 
 	service := getServiceFromResourceData(d)
 
 	createdService := new(Service)
-	response, error := sling.New().BodyJSON(service).Post("services/").ReceiveSuccess(createdService)
+	response, e := s.New().BodyJSON(service).Post("services/").ReceiveSuccess(createdService)
 
-	if error != nil {
-		return fmt.Errorf("error while creating Service: " + error.Error())
+	if e != nil {
+		return fmt.Errorf("error while creating Service: " + e.Error())
 	}
 
 	if response.StatusCode == http.StatusConflict {
@@ -135,15 +159,15 @@ func resourceKongServiceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKongServiceRead(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	s := meta.(*sling.Sling)
 
 	id := d.Get("id").(string)
 	service := new(Service)
 
-	response, error := sling.New().Path("services/").Get(id).ReceiveSuccess(service)
+	response, e := s.New().Path("services/").Get(id).ReceiveSuccess(service)
 
-	if error != nil {
-		return fmt.Errorf("error while updating Service" + error.Error())
+	if e != nil {
+		return fmt.Errorf("error while updating Service" + e.Error())
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -159,16 +183,16 @@ func resourceKongServiceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKongServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	s := meta.(*sling.Sling)
 
 	service := getServiceFromResourceData(d)
 
 	updatedService := new(Service)
 
-	response, error := sling.New().BodyJSON(service).Patch("services/").Path(service.ID).ReceiveSuccess(updatedService)
+	response, e := s.New().BodyJSON(service).Patch("services/").Path(service.ID).ReceiveSuccess(updatedService)
 
-	if error != nil {
-		return fmt.Errorf("error while updating Service" + error.Error())
+	if e != nil {
+		return fmt.Errorf("error while updating Service" + e.Error())
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -181,13 +205,13 @@ func resourceKongServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKongServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	s := meta.(*sling.Sling)
 
 	id := d.Get("id").(string)
 
-	response, error := sling.New().Delete("services/").Path(id).ReceiveSuccess(nil)
-	if error != nil {
-		return fmt.Errorf("error while deleting Service" + error.Error())
+	response, e := s.New().Delete("services/").Path(id).ReceiveSuccess(nil)
+	if e != nil {
+		return fmt.Errorf("error while deleting Service" + e.Error())
 	}
 
 	if response.StatusCode != http.StatusNoContent {
@@ -208,6 +232,7 @@ func getServiceFromResourceData(d *schema.ResourceData) *Service {
 		ConnectTimeout: d.Get("connect_timeout").(int),
 		WriteTimeout:   d.Get("write_timeout").(int),
 		ReadTimeout:    d.Get("read_timeout").(int),
+		Url:            d.Get("url").(string),
 	}
 
 	if id, ok := d.GetOk("id"); ok {
@@ -219,13 +244,14 @@ func getServiceFromResourceData(d *schema.ResourceData) *Service {
 
 func setServiceToResourceData(d *schema.ResourceData, service *Service) {
 	d.SetId(service.ID)
-	d.Set("name", service.Name)
-	d.Set("protocol", service.Protocol)
-	d.Set("host", service.Host)
-	d.Set("port", service.Port)
-	d.Set("path", service.Path)
-	d.Set("retries", service.Retries)
-	d.Set("connect_timeout", service.ConnectTimeout)
-	d.Set("write_timeout", service.WriteTimeout)
-	d.Set("read_timeout", service.ReadTimeout)
+	_ = d.Set("name", service.Name)
+	_ = d.Set("protocol", service.Protocol)
+	_ = d.Set("host", service.Host)
+	_ = d.Set("port", service.Port)
+	_ = d.Set("path", service.Path)
+	_ = d.Set("retries", service.Retries)
+	_ = d.Set("connect_timeout", service.ConnectTimeout)
+	_ = d.Set("write_timeout", service.WriteTimeout)
+	_ = d.Set("read_timeout", service.ReadTimeout)
+	_ = d.Set("url", service.Url)
 }
