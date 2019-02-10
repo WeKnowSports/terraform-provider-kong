@@ -3,6 +3,7 @@ package kong
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -53,6 +54,9 @@ func resourceKongJWTCredential() *schema.Resource {
 				Optional:    true,
 				Default:     nil,
 				Description: "If algorithm is RS256, the public key (in PEM format) to use to verify the token's signature.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 			},
 
 			"secret": {
@@ -60,6 +64,9 @@ func resourceKongJWTCredential() *schema.Resource {
 				Optional:    true,
 				Default:     nil,
 				Description: "If algorithm is HS256, the secret used to sign JWTs for this credential. If left out, will be auto-generated.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "" || new != old
+				},
 			},
 
 			"consumer": {
