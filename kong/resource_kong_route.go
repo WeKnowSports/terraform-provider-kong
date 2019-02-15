@@ -2,9 +2,10 @@ package kong
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
-	"net/http"
 )
 
 // Route : Kong Route request object structure
@@ -14,8 +15,8 @@ type Route struct {
 	Methods      []string `json:"methods,omitempty"`
 	Hosts        []string `json:"hosts,omitempty"`
 	Paths        []string `json:"paths,omitempty"`
-	StripPath    bool     `json:"strip_path,omitempty"`
-	PreserveHost bool     `json:"preserve_host,omitempty"`
+	StripPath    bool     `json:"strip_path"`
+	PreserveHost bool     `json:"preserve_host"`
 	Service      Service  `json:"service,omitempty"`
 }
 
@@ -37,17 +38,17 @@ func resourceKongRoute() *schema.Resource {
 			},
 
 			"protocols": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Default:     nil,
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Default:  nil,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					protocols := convertInterfaceArrToStrings(d.Get("protocols").([]interface{}))
 
 					// TODO: Yeah...
 					return len(protocols) == 2 &&
 						((protocols[0] == "http" && protocols[1] == "https") ||
-						(protocols[0] == "https" && protocols[1] == "http"))
+							(protocols[0] == "https" && protocols[1] == "http"))
 				},
 				Description: "A list of the protocols this Route should allow. By default it is [\"http\", \"https\"], which means that the Route accepts both. When set to [\"https\"], HTTP requests are answered with a request to upgrade to HTTPS.",
 			},
@@ -61,19 +62,21 @@ func resourceKongRoute() *schema.Resource {
 			},
 
 			"hosts": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Default:     nil,
-				Description: "A list of domain names that match this Route. For example: example.com. At least one of hosts, paths, or methods must be set.",
+				Type:          schema.TypeList,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Default:       nil,
+				PromoteSingle: true,
+				Description:   "A list of domain names that match this Route. For example: example.com. At least one of hosts, paths, or methods must be set.",
 			},
 
 			"paths": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Default:     nil,
-				Description: "A list of paths that match this Route. For example: /my-path. At least one of hosts, paths, or methods must be set.",
+				Type:          schema.TypeList,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Default:       nil,
+				PromoteSingle: true,
+				Description:   "A list of paths that match this Route. For example: /my-path. At least one of hosts, paths, or methods must be set.",
 			},
 
 			"strip_path": {

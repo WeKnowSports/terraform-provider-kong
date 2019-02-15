@@ -13,10 +13,11 @@ type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
-	API           string                 `json:"-"`
-	Service       string                 `json:"-"`
-	Route         string                 `json:"-"`
+	API           string                 `json:"api_id,omitempty"`
+	Service       string                 `json:"service_id,omitempty"`
+	Route         string                 `json:"route_id,omitempty"`
 	Consumer      string                 `json:"consumer_id,omitempty"`
+	CreatedAt     int                    `json:"created_at,omitempty"`
 }
 
 func resourceKongPlugin() *schema.Resource {
@@ -69,14 +70,19 @@ func resourceKongPlugin() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Default:       nil,
-				ConflictsWith: []string{"api", "route"},
+				ConflictsWith: []string{"api"},
 			},
 
 			"route": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Default:       nil,
-				ConflictsWith: []string{"api", "service"},
+				ConflictsWith: []string{"api"},
+			},
+
+			"created_at": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 	}
@@ -89,22 +95,13 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 
 	createdPlugin := getPluginFromResourceData(d)
 
-	request := sling.New().BodyJSON(plugin)
-	if plugin.API != "" {
-		request = request.Path("apis/").Path(plugin.API + "/")
-	} else if plugin.Service != "" {
-		request = request.Path("services/").Path(plugin.Service + "/")
-	} else if plugin.Route != "" {
-		request = request.Path("routes/").Path(plugin.Route + "/")
-	}
-
-	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
+	response, error := sling.New().BodyJSON(plugin).Post("plugins/").ReceiveSuccess(createdPlugin)
 	if error != nil {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
 
 	if response.StatusCode == http.StatusConflict {
-		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
+		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin")
 	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
@@ -152,7 +149,7 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	updatedPlugin := getPluginFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
+	response, error := sling.New().BodyJSON(plugin).Put("plugins/").ReceiveSuccess(updatedPlugin)
 	if error != nil {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
@@ -193,10 +190,16 @@ func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
 		Service:       d.Get("service").(string),
 		Route:         d.Get("route").(string),
 		Consumer:      d.Get("consumer").(string),
+		Service:       d.Get("service").(string),
+		Route:         d.Get("route").(string),
 	}
 
 	if id, ok := d.GetOk("id"); ok {
 		plugin.ID = id.(string)
+	}
+
+	if createdAt, ok := d.GetOk("created_at"); ok {
+		plugin.CreatedAt = createdAt.(int)
 	}
 
 	return plugin
@@ -210,4 +213,7 @@ func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
 	d.Set("service", plugin.Service)
 	d.Set("route", plugin.Route)
 	d.Set("consumer", plugin.Consumer)
+	d.Set("serivce", plugin.Service)
+	d.Set("route", plugin.Route)
+	d.Set("created_at", plugin.CreatedAt)
 }
