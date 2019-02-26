@@ -40,6 +40,7 @@ func resourceKongJWTCredential() *schema.Resource {
 				Optional:    true,
 				Default:     nil,
 				Description: "TA unique string identifying the credential. If left out, it will be auto-generated.",
+				Sensitive: true,
 			},
 
 			"algorithm": {
@@ -57,6 +58,7 @@ func resourceKongJWTCredential() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.TrimSpace(old) == strings.TrimSpace(new)
 				},
+				Sensitive: true,
 			},
 
 			"secret": {
@@ -67,6 +69,7 @@ func resourceKongJWTCredential() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return new == "" || new != old
 				},
+				Sensitive: true,
 			},
 
 			"consumer": {
