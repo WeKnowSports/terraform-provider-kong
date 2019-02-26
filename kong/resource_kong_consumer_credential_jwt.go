@@ -67,7 +67,7 @@ func resourceKongJWTCredential() *schema.Resource {
 				Default:     nil,
 				Description: "If algorithm is HS256, the secret used to sign JWTs for this credential. If left out, will be auto-generated.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return new == "" || new != old
+					return new == "" && d.Get("rsa_public_key") != ""
 				},
 				Sensitive: true,
 			},
