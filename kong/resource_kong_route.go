@@ -11,9 +11,9 @@ import (
 type Route struct {
 	ID           string   `json:"id,omitempty"`
 	Protocols    []string `json:"protocols,omitempty"`
-	Methods      []string `json:"methods,omitempty"`
-	Hosts        []string `json:"hosts,omitempty"`
-	Paths        []string `json:"paths,omitempty"`
+	Methods      []string `json:"methods"`
+	Hosts        []string `json:"hosts"`
+	Paths        []string `json:"paths"`
 	StripPath    bool     `json:"strip_path,omitempty"`
 	PreserveHost bool     `json:"preserve_host,omitempty"`
 	Service      Service  `json:"service,omitempty"`
