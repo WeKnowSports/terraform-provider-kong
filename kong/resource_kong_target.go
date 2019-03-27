@@ -3,6 +3,7 @@ package kong
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -36,7 +37,7 @@ func resourceKongTarget() *schema.Resource {
 				Required:    true,
 				Description: "The target address (ip or hostname) and port. If omitted the port defaults to 8000. If the hostname resolves to an SRV record, the port value will overridden by the value from the dns record.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return new == "8000" || new != old
+					return strings.HasSuffix(old, "8000") && !strings.Contains(new, ":")
 				},
 				ForceNew:    true,
 			},
