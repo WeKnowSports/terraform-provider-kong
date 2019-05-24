@@ -35,7 +35,7 @@ func resourceKongTarget() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.TrimSuffix(new, ":8000") == strings.TrimSuffix(old, ":8000")
 				},
-				ForceNew:    true,
+				ForceNew: true,
 			},
 		},
 	}

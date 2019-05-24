@@ -35,7 +35,7 @@ func resourceKongJWTCredential() *schema.Resource {
 				Optional:    true,
 				Default:     nil,
 				Description: "TA unique string identifying the credential. If left out, it will be auto-generated.",
-				Sensitive: true,
+				Sensitive:   true,
 			},
 
 			"algorithm": {

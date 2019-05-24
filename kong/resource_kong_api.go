@@ -237,7 +237,7 @@ func resourceKongAPIDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getAPIFromResourceData(d *schema.ResourceData) *APIRequest {
 	api := &APIRequest{
-		ID: 					d.Id(),
+		ID:                     d.Id(),
 		Name:                   d.Get("name").(string),
 		Hosts:                  d.Get("hosts").(string),
 		Uris:                   d.Get("uris").(string),

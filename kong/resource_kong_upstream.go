@@ -84,9 +84,9 @@ func resourceKongUpstream() *schema.Resource {
 				Description: "The cookie name to take the value from as hash input (only required when hash_on or hash_fallback is set to cookie). If the specified cookie is not in the request, Kong will generate a value and set the cookie in the response.",
 			},
 			"hash_on_cookie_path": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "/",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "/",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return (old == "" && new == "/") || (old == "/" && new == "")
 				},
@@ -179,9 +179,9 @@ func resourceKongUpstreamDelete(d *schema.ResourceData, meta interface{}) error 
 
 func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 	upstream := &Upstream{
-		ID:    d.Id(),
-		Name:  d.Get("name").(string),
-		Slots: d.Get("slots").(int),
+		ID:                 d.Id(),
+		Name:               d.Get("name").(string),
+		Slots:              d.Get("slots").(int),
 		HashOn:             d.Get("hash_on").(string),
 		HashFallback:       d.Get("hash_fallback").(string),
 		HashOnHeader:       d.Get("hash_on_header").(string),
