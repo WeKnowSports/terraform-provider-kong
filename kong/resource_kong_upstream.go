@@ -28,10 +28,6 @@ func resourceKongUpstream() *schema.Resource {
 		Delete: resourceKongUpstreamDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -183,6 +179,7 @@ func resourceKongUpstreamDelete(d *schema.ResourceData, meta interface{}) error 
 
 func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 	upstream := &Upstream{
+		ID:    d.Id(),
 		Name:  d.Get("name").(string),
 		Slots: d.Get("slots").(int),
 		HashOn:             d.Get("hash_on").(string),
@@ -191,10 +188,6 @@ func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 		HashFallbackHeader: d.Get("hash_fallback_header").(string),
 		HashOnCookie:       d.Get("hash_on_cookie").(string),
 		HashOnCookiePath:   d.Get("hash_on_cookie_path").(string),
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		upstream.ID = id.(string)
 	}
 
 	return upstream

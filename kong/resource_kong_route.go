@@ -31,11 +31,6 @@ func resourceKongRoute() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"protocols": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -132,7 +127,7 @@ func resourceKongRouteCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceKongRouteRead(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	id := d.Get("id").(string)
+	id := d.Id()
 	route := new(Route)
 
 	response, error := sling.New().Path("routes/").Get(id).ReceiveSuccess(route)
@@ -178,7 +173,7 @@ func resourceKongRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceKongRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	id := d.Get("id").(string)
+	id := d.Id()
 
 	response, error := sling.New().Delete("routes/").Path(id).ReceiveSuccess(nil)
 	if error != nil {
@@ -194,6 +189,7 @@ func resourceKongRouteDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getRouteFromResourceData(d *schema.ResourceData) *Route {
 	route := &Route{
+		ID:           d.Id(),
 		Protocols:    convertInterfaceArrToStrings(d.Get("protocols").([]interface{})),
 		Methods:      convertInterfaceArrToStrings(d.Get("methods").([]interface{})),
 		Hosts:        convertInterfaceArrToStrings(d.Get("hosts").([]interface{})),
@@ -203,10 +199,6 @@ func getRouteFromResourceData(d *schema.ResourceData) *Route {
 		Service: Service{
 			ID: d.Get("service").(string),
 		},
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		route.ID = id.(string)
 	}
 
 	return route

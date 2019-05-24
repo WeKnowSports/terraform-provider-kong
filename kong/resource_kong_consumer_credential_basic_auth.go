@@ -30,11 +30,6 @@ func resourceKongBasicAuthCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -146,13 +141,10 @@ func resourceKongBasicAuthCredentialDelete(d *schema.ResourceData, meta interfac
 
 func getBasicAuthCredentialFromResourceData(d *schema.ResourceData) *BasicAuthCredential {
 	basicAuthCredential := &BasicAuthCredential{
+		ID:       d.Id(),
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
 		Consumer: d.Get("consumer").(string),
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		basicAuthCredential.ID = id.(string)
 	}
 
 	return basicAuthCredential

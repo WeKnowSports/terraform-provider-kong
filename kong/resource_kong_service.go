@@ -34,11 +34,6 @@ func resourceKongService() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -161,7 +156,7 @@ func resourceKongServiceCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceKongServiceRead(d *schema.ResourceData, meta interface{}) error {
 	s := meta.(*sling.Sling)
 
-	id := d.Get("id").(string)
+	id := d.Id()
 	service := new(Service)
 
 	response, e := s.New().Path("services/").Get(id).ReceiveSuccess(service)
@@ -207,7 +202,7 @@ func resourceKongServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceKongServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	s := meta.(*sling.Sling)
 
-	id := d.Get("id").(string)
+	id := d.Id()
 
 	response, e := s.New().Delete("services/").Path(id).ReceiveSuccess(nil)
 	if e != nil {
@@ -223,6 +218,7 @@ func resourceKongServiceDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getServiceFromResourceData(d *schema.ResourceData) *Service {
 	service := &Service{
+		ID:             d.Id(),
 		Name:           d.Get("name").(string),
 		Protocol:       d.Get("protocol").(string),
 		Host:           d.Get("host").(string),
@@ -233,10 +229,6 @@ func getServiceFromResourceData(d *schema.ResourceData) *Service {
 		WriteTimeout:   d.Get("write_timeout").(int),
 		ReadTimeout:    d.Get("read_timeout").(int),
 		Url:            d.Get("url").(string),
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		service.ID = id.(string)
 	}
 
 	return service

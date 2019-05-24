@@ -22,10 +22,6 @@ func resourceKongConsumerACLGroup() *schema.Resource {
 		Delete: resourceKongConsumerACLGroupDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"group": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -122,12 +118,9 @@ func resourceKongConsumerACLGroupDelete(d *schema.ResourceData, meta interface{}
 
 func getConsumerACLGroupFromResourceData(d *schema.ResourceData) *ConsumerACLGroup {
 	consumerACLGroup := &ConsumerACLGroup{
+		ID:       d.Id(),
 		Group:    d.Get("group").(string),
 		Consumer: d.Get("consumer").(string),
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		consumerACLGroup.ID = id.(string)
 	}
 
 	return consumerACLGroup

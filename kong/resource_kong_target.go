@@ -22,10 +22,6 @@ func resourceKongTarget() *schema.Resource {
 		Delete: resourceKongTargetDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"upstream": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -90,12 +86,9 @@ func resourceKongTargetDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getTargetFromResourceData(d *schema.ResourceData) *Target {
 	target := &Target{
+		ID:       d.Id(),
 		Target:   d.Get("target").(string),
 		Upstream: d.Get("upstream").(string),
-	}
-
-	if id, ok := d.GetOk("id"); ok {
-		target.ID = id.(string)
 	}
 
 	return target
