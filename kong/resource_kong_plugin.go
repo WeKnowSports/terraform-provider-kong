@@ -1,11 +1,13 @@
 package kong
 
 import (
+	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
+	"net/http"
+	"net/url"
+	"strings"
 )
 
 // Plugin : Kong Service/API plugin request object structure
@@ -50,6 +52,14 @@ func resourceKongPlugin() *schema.Resource {
 				Optional: true,
 				Elem:     schema.TypeString,
 				Default:  nil,
+				ConflictsWith: []string{ "config_json" },
+			},
+
+			"config_json": {
+				Type: schema.TypeString,
+				Optional: true,
+				Default: nil,
+				ConflictsWith: []string{ "config" },
 			},
 
 			"api": {
@@ -78,24 +88,20 @@ func resourceKongPlugin() *schema.Resource {
 }
 
 func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	request := buildModifyRequest(d, meta)
+	p := &Plugin{}
 
-	plugin := getPluginFromResourceData(d)
-
-	createdPlugin := getPluginFromResourceData(d)
-
-	request := sling.New().BodyJSON(plugin)
-	if plugin.API != "" {
-		request = request.Path("apis/").Path(plugin.API + "/")
-	} else if plugin.Service != "" {
-		request = request.Path("services/").Path(plugin.Service + "/")
-	} else if plugin.Route != "" {
-		request = request.Path("routes/").Path(plugin.Route + "/")
+	if api, ok := d.GetOk("api"); ok {
+		request = request.Path("apis/").Path(api.(string) + "/")
+	} else if service, ok := d.GetOk("service"); ok {
+		request = request.Path("services/").Path(service.(string) + "/")
+	} else if route, ok := d.GetOk("route"); ok {
+		request = request.Path("routes/").Path(route.(string) + "/")
 	}
 
-	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
-	if error != nil {
-		return fmt.Errorf("error while creating plugin: " + error.Error())
+	response, err := request.Post("plugins/").ReceiveSuccess(p)
+	if err != nil {
+		return fmt.Errorf("error while creating plugin: " + err.Error())
 	}
 
 	if response.StatusCode == http.StatusConflict {
@@ -104,26 +110,17 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
-	createdPlugin.Configuration = plugin.Configuration
-
-	setPluginToResourceData(d, createdPlugin)
-
-	return nil
+	return setPluginToResourceData(d, p)
 }
 
 func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	plugin := getPluginFromResourceData(d)
+	p := &Plugin{}
 
-	configuration := make(map[string]interface{})
-	for key, value := range plugin.Configuration {
-		configuration[key] = value
-	}
-
-	response, error := sling.New().Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
-	if error != nil {
-		return fmt.Errorf("error while updating plugin: " + error.Error())
+	response, err := sling.New().Path("plugins/").Get(d.Id()).ReceiveSuccess(p)
+	if err != nil {
+		return fmt.Errorf("error while updating plugin: " + err.Error())
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -133,42 +130,30 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
-	plugin.Configuration = configuration
-
-	setPluginToResourceData(d, plugin)
-
-	return nil
+	return setPluginToResourceData(d, p)
 }
 
 func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	request := buildModifyRequest(d, meta)
 
-	plugin := getPluginFromResourceData(d)
+	p := &Plugin{}
 
-	updatedPlugin := getPluginFromResourceData(d)
-
-	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
-	if error != nil {
-		return fmt.Errorf("error while updating plugin: " + error.Error())
+	response, err := request.Path("plugins/").Patch(d.Id()).ReceiveSuccess(p)
+	if err != nil {
+		return fmt.Errorf("error while updating plugin: " + err.Error())
 	}
 
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
-	updatedPlugin.Configuration = plugin.Configuration
-
-	setPluginToResourceData(d, updatedPlugin)
-
-	return nil
+	return setPluginToResourceData(d, p)
 }
 
 func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	plugin := getPluginFromResourceData(d)
-
-	response, error := sling.New().Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
+	response, error := sling.New().Path("plugins/").Delete(d.Id()).ReceiveSuccess(nil)
 	if error != nil {
 		return fmt.Errorf("error while deleting plugin: " + error.Error())
 	}
@@ -180,26 +165,65 @@ func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
+func buildModifyRequest(d *schema.ResourceData, meta interface{}) *sling.Sling {
+	request := meta.(*sling.Sling).New()
+
 	plugin := &Plugin{
 		ID:            d.Id(),
 		Name:          d.Get("name").(string),
-		Configuration: d.Get("config").(map[string]interface{}),
 		API:           d.Get("api").(string),
 		Service:       d.Get("service").(string),
 		Route:         d.Get("route").(string),
 		Consumer:      d.Get("consumer").(string),
 	}
 
-	return plugin
+	if c, ok := d.GetOk("config"); ok {
+		form := url.Values{
+			"name": {plugin.Name},
+		}
+
+		conf := c.(map[string]interface{})
+		for k, v := range conf {
+			form.Add("config." + k, v.(string))
+		}
+
+		body := strings.NewReader(form.Encode())
+
+		request = request.Body(body).Set("Content-Type", "application/x-www-form-urlencoded")
+	} else if c, ok := d.GetOk("config_json"); ok {
+		config := make(map[string]interface{})
+		err := json.Unmarshal([]byte(c.(string)), &config)
+		if err != nil {
+			// ...
+		}
+
+		plugin.Configuration = config
+
+		request = request.BodyJSON(plugin)
+	}
+
+	return request
 }
 
-func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
+func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) error {
 	d.SetId(plugin.ID)
-	d.Set("name", plugin.Name)
-	d.Set("config", plugin.Configuration)
-	d.Set("api", plugin.API)
-	d.Set("service", plugin.Service)
-	d.Set("route", plugin.Route)
-	d.Set("consumer", plugin.Consumer)
+
+	_ = d.Set("name", plugin.Name)
+
+	// There are differences in the way service/route IDs are returned from Kong after creation and update between
+	// version before and after 1.0.0. We are risking some drift here. This will be handled in later versions.
+	if api, ok := d.GetOk("api"); ok {
+		plugin.API = api.(string)
+	} else if service, ok := d.GetOk("service"); ok {
+		plugin.Service = service.(string)
+	} else if route, ok := d.GetOk("route"); ok {
+		plugin.Route = route.(string)
+	}
+
+	_ = d.Set("api", plugin.API)
+	_ = d.Set("service", plugin.Service)
+	_ = d.Set("route", plugin.Route)
+	_ = d.Set("consumer", plugin.Consumer)
+
+	return nil
 }
