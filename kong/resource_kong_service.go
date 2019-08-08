@@ -5,6 +5,7 @@ import (
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
 	"net/http"
+	"strconv"
 )
 
 // Service : Kong Service request object structure
@@ -120,7 +121,7 @@ func resourceKongService() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					service := getServiceFromResourceData(d)
 
-					oldUrl := service.Protocol + "://" + service.Host + ":" + string(service.Port) + service.Path
+					oldUrl := service.Protocol + "://" + service.Host + ":" + strconv.FormatInt(int64(service.Port), 10) + service.Path
 					oldUrlNoPort := service.Protocol + "://" + service.Host + service.Path
 
 					return new == oldUrl || new == oldUrlNoPort
