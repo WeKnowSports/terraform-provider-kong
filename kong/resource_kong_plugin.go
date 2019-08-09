@@ -177,20 +177,7 @@ func buildModifyRequest(d *schema.ResourceData, meta interface{}) *sling.Sling {
 		Consumer:      d.Get("consumer").(string),
 	}
 
-	if c, ok := d.GetOk("config"); ok {
-		form := url.Values{
-			"name": {plugin.Name},
-		}
-
-		conf := c.(map[string]interface{})
-		for k, v := range conf {
-			form.Add("config." + k, v.(string))
-		}
-
-		body := strings.NewReader(form.Encode())
-
-		request = request.Body(body).Set("Content-Type", "application/x-www-form-urlencoded")
-	} else if c, ok := d.GetOk("config_json"); ok {
+	if c, ok := d.GetOk("config_json"); ok {
 		config := make(map[string]interface{})
 		err := json.Unmarshal([]byte(c.(string)), &config)
 		if err != nil {
@@ -200,6 +187,21 @@ func buildModifyRequest(d *schema.ResourceData, meta interface{}) *sling.Sling {
 		plugin.Configuration = config
 
 		request = request.BodyJSON(plugin)
+	} else {
+		form := url.Values{
+			"name": {plugin.Name},
+		}
+
+		if c, ok := d.GetOk("config"); ok {
+			conf := c.(map[string]interface{})
+			for k, v := range conf {
+				form.Add("config."+k, v.(string))
+			}
+		}
+
+		body := strings.NewReader(form.Encode())
+
+		request = request.Body(body).Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 
 	return request
