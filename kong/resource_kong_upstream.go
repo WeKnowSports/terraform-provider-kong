@@ -18,6 +18,7 @@ type Upstream struct {
 	HashFallbackHeader string `json:"hash_fallback_header,omitempty"`
 	HashOnCookie       string `json:"hash_on_cookie,omitempty"`
 	HashOnCookiePath   string `json:"hash_on_cookie_path,omitempty"`
+	Algorithm          string `json:"algorithm,omitempty"`
 }
 
 func resourceKongUpstream() *schema.Resource {
@@ -91,6 +92,21 @@ func resourceKongUpstream() *schema.Resource {
 					return (old == "" && new == "/") || (old == "/" && new == "")
 				},
 				Description: "The cookie path to set in the response headers (only required when hash_on or hash_fallback is set to cookie, defaults to \"/\")",
+			},
+			"algorithm": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Which load balancing algorithm to use. One of: round-robin, consistent-hashing, or least-connections. Defaults to \"round-robin\". Kong 1.3.0 and up.",
+				ValidateFunc: func(i interface{}, s string) (strings []string, errors []error) {
+					algs := []string{"round-robin", "consistent-hashing", "least-connections"}
+					for i := 0; i < len(algs); i++ {
+						if algs[i] == s {
+							return nil, nil
+						}
+					}
+
+					return nil, append(errors, fmt.Errorf("algorithm must be one of %v. %s was provided instead.", algs, s))
+				},
 			},
 		},
 	}
@@ -188,6 +204,7 @@ func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 		HashFallbackHeader: d.Get("hash_fallback_header").(string),
 		HashOnCookie:       d.Get("hash_on_cookie").(string),
 		HashOnCookiePath:   d.Get("hash_on_cookie_path").(string),
+		Algorithm:          d.Get("algorithm").(string),
 	}
 
 	return upstream
@@ -202,5 +219,5 @@ func setUpstreamToResourceData(d *schema.ResourceData, upstream *Upstream) {
 	d.Set("hash_on_header", upstream.HashOnHeader)
 	d.Set("hash_fallback_header", upstream.HashFallbackHeader)
 	d.Set("hash_on_cookie", upstream.HashOnCookie)
-	d.Set("hash_on_cookie_path", upstream.HashOnCookiePath)
+	d.Set("algorithm", upstream.Algorithm)
 }
