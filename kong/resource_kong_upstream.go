@@ -5,73 +5,27 @@ import (
 	"net/http"
 
 	"github.com/dghubble/sling"
-	"github.com/hashicorp/terraform/helper/schema"
+	//"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func ValidateHTTPStatuses(httpstatuses []string) {
+var (
+	HealthchecksTypes = []string {"http","tcp","https"}
+)
 
-}
-
-type PassiveHealthy struct {
-	Successes     int       `json:"successes,omitempty"`
-	HttpStatuses  []string  `json:"http_statuses,omitempty"`
-}
-
-type PassiveUnhealthy struct {
-	HttpFailures  int       `json:"http_failures,omitempty"`
-	HttpStatuses  []string  `json:"http_statuses,omitempty"`
-	TcpFailures   int       `json:"tcp_failures,omitempty"`
-	Timeouts      int       `json:"timeout,omitempty"`
-}
-
-type HealthChecksPassive struct {
-	Type       string            `json:"type,omitempty"`
-	Healthy    PassiveHealthy    `json:"healthy,omitempty"`
-	Unhealthy  PassiveUnhealthy  `json:"unhealthy,omitempty"`
-}
-
-type ActiveHealthy struct {
-	Successes     int       `json:"successes,omitempty"`
-	Interval      int       `json:"interval,omitempty"`
-	HttpStatuses  []string  `json:"http_statuses,omitempty"`
-}
-
-type ActiveUnhealthy struct {
-	HttpStatuses  []string  `json:"http_statuses,omitempty"`
-	TcpFailures   int       `json:"tcp_failures,omitempty"`
-	Timeouts      int       `json:"timeouts,omitempty"`
-	HttpFailures  int       `json:"http_failures,omitempty"`
-	Interval      int       `json:"interval,omitempty"`
-}
-
-type HealthChecksActive struct {
-	HttpsVerifyCertificate    bool              `json:"https_verify_certificate,omitempty"`
-	HttpPath                  string            `json:"http_path,omitempty"`
-	Timeout                   int               `json:"timeout,omitempty"`
-	HttpsSni                  string            `json:"https_sni,omitempty"`
-	Concurrency               int               `json:"concurrency,omitempty"`
-	Type                      string            `json:"type,omitempty"`
-	Healthy                   ActiveHealthy     `json:"healthy,omitempty"`
-	Unhealthy                 ActiveUnhealthy   `json:"unhealthy,omitempty"`
-}
-
-type UpstreamHealthChecks struct {
-	Active  HealthChecksActive
-	Passive HealthChecksPassive
-}
 
 type Upstream struct {
-	ID                 string                  `json:"id,omitempty"`
-	Name               string                  `json:"name,omitempty"`
-	Slots              int                     `json:"slots,omitempty"`
-	HashOn             string                  `json:"hash_on,omitempty"`
-	HashFallback       string                  `json:"hash_fallback,omitempty"`
-	HashOnHeader       string                  `json:"hash_on_header,omitempty"`
-	HashFallbackHeader string                  `json:"hash_fallback_header,omitempty"`
-	HashOnCookie       string                  `json:"hash_on_cookie,omitempty"`
-	HashOnCookiePath   string                  `json:"hash_on_cookie_path,omitempty"`
-	Algorithm          string                  `json:"algorithm,omitempty"`
-	HealthChecks       UpstreamHealthChecks    `json:"healthchecks,omitempty"`
+	ID                 string               `json:"id,omitempty"`
+	Name               string               `json:"name,omitempty"`
+	Slots              int                  `json:"slots,omitempty"`
+	HashOn             string               `json:"hash_on,omitempty"`
+	HashFallback       string               `json:"hash_fallback,omitempty"`
+	HashOnHeader       string               `json:"hash_on_header,omitempty"`
+	HashFallbackHeader string               `json:"hash_fallback_header,omitempty"`
+	HashOnCookie       string               `json:"hash_on_cookie,omitempty"`
+	HashOnCookiePath   string               `json:"hash_on_cookie_path,omitempty"`
+	Algorithm          string               `json:"algorithm,omitempty"`
+	HealthChecks       schema.Resource
 }
 
 func resourceKongUpstream() *schema.Resource {
@@ -158,27 +112,179 @@ func resourceKongUpstream() *schema.Resource {
 						}
 					}
 
-					return nil, append(errors, fmt.Errorf("algorithm must be one of %v. %s was provided instead.", algs, s))
+					return nil, append(errors, fmt.Errorf("algorithm must be one of %v. %s was provided instead", algs, s))
 				},
 			},
 			"healthchecks": {
-				Type:             schema.TypeMap,
-				Optional:         true,
-				Description:      "Health checks configuration for upstream.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				MaxItems:    1,
+				Description: "Health checks configuration for upstream.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"active": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							ForceNew:    true,
+							MaxItems:    1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"https_verify_certificate": {
+										Type:        schema.TypeBool,
+										Optional:    true,
+									},
+									"http_path": {
+										Type:       schema.TypeString,
+										Optional:   true,
+									},
+									"timeout": {
+											Type: schema.TypeInt,
+											Optional:true,
+									},
+									"https_sni":{
+												Type: schema.TypeString,
+												Optional:true,
+									},
+									"concurrency":{
+													Type: schema.TypeInt,
+													Optional:true,
+									},
+									"type":{
+										Type:schema.TypeString,
+										Optional:true,
+										ExactlyOneOf: HealthchecksTypes,
+									},
+									"healthy":{
+										Type:        schema.TypeList,
+										Optional:    true,
+										ForceNew:    true,
+										MaxItems:    1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"successes":{
+													Type:schema.TypeInt,
+													Optional:true,
+												},
+												"interval":{
+													Type:schema.TypeInt,
+													Optional:true,
+												},
+												"http_statuses":{
+														Type:schema.TypeString,
+														Optional:true,
+												},
+											},
+										},
+									},
+									"unhealthy":{
+										Type:schema.TypeList,
+										Optional:true,
+										ForceNew:true,
+										MaxItems:    1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"http_statuses":{
+													Type:schema.TypeString,
+													Optional:true,
+												},
+												"tcp_failures":{
+													Type:schema.TypeInt,
+													Optional:true,
+												},
+												"timeouts":{
+													Type:schema.TypeInt,
+													Optional:true,
+												},
+												"http_failures":{
+													Type:schema.TypeInt,
+													Optional:true,
+												},
+												"interval":{
+													Type:schema.TypeInt,
+													Optional:true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"passive": {
+							Type:schema.TypeString,
+							Optional:true,
+							ForceNew:    true,
+							MaxItems:    1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type":{
+										Type:schema.TypeString,
+										Optional:true,
+										ExactlyOneOf: HealthchecksTypes,
+									},
+									"healthy": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"successes":{
+													Type:schema.TypeInt,
+													Optional:true,
+												},
+												"http_statuses":{
+													Type:schema.TypeString,
+													Optional:true,
+												},
+											},
+										},
+									},
+									"unhealthy": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"http_failures":{
+													Type:schema.TypeInt,
+													Optional:true,
+												},
+												"http_statuses":{
+													Type:schema.TypeString,
+													Optional:true,
+												},
+												"tcp_failures":{
+													Type:schema.TypeInt,
+													Optional:true,
+												},
+												"timeout":{
+													Type:schema.TypeInt,
+													Optional:true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
 }
 
 func resourceKongUpstreamCreate(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
 
 	createdUpstream := getUpstreamFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(upstream).Post("upstreams/").ReceiveSuccess(createdUpstream)
-	if error != nil {
+	response, Error := Sling.New().BodyJSON(upstream).Post("upstreams/").ReceiveSuccess(createdUpstream)
+	if Error != nil {
 		return fmt.Errorf("Error while creating upstream.")
 	}
 
@@ -192,13 +298,13 @@ func resourceKongUpstreamCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceKongUpstreamRead(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
 
-	response, error := sling.New().Path("upstreams/").Get(upstream.ID).ReceiveSuccess(upstream)
-	if error != nil {
-		return fmt.Errorf("Error while updating upstream.")
+	response, Error := Sling.New().Path("upstreams/").Get(upstream.ID).ReceiveSuccess(upstream)
+	if Error != nil {
+		return fmt.Errorf("Error while updating upstream")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -214,14 +320,14 @@ func resourceKongUpstreamRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKongUpstreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
 
 	updatedUpstream := getUpstreamFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(upstream).Path("upstreams/").Patch(upstream.ID).ReceiveSuccess(updatedUpstream)
-	if error != nil {
+	response, Error := Sling.New().BodyJSON(upstream).Path("upstreams/").Patch(upstream.ID).ReceiveSuccess(updatedUpstream)
+	if Error != nil {
 		return fmt.Errorf("Error while updating upstream")
 	}
 
@@ -235,13 +341,13 @@ func resourceKongUpstreamUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceKongUpstreamDelete(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
 
-	response, error := sling.New().Path("upstreams/").Delete(upstream.ID).ReceiveSuccess(nil)
-	if error != nil {
-		return fmt.Errorf("Error while deleting upstream.")
+	response, Error := Sling.New().Path("upstreams/").Delete(upstream.ID).ReceiveSuccess(nil)
+	if Error != nil {
+		return fmt.Errorf("Error while deleting upstream")
 	}
 
 	if response.StatusCode != http.StatusNoContent {
@@ -263,7 +369,7 @@ func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 		HashOnCookie:       d.Get("hash_on_cookie").(string),
 		HashOnCookiePath:   d.Get("hash_on_cookie_path").(string),
 		Algorithm:          d.Get("algorithm").(string),
-		HealthChecks:       d.Get("healthchecks").(UpstreamHealthChecks),
+		HealthChecks:       d.Get("healthchecks").(schema.Resource),
 	}
 
 	return upstream
@@ -279,5 +385,5 @@ func setUpstreamToResourceData(d *schema.ResourceData, upstream *Upstream) {
 	d.Set("hash_fallback_header", upstream.HashFallbackHeader)
 	d.Set("hash_on_cookie", upstream.HashOnCookie)
 	d.Set("algorithm", upstream.Algorithm)
-    d.Set("healthchecks", upstream.HealthChecks)
+	d.Set("healthchecks", upstream.HealthChecks)
 }
