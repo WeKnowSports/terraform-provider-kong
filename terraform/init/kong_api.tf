@@ -24,3 +24,25 @@ resource "kong_consumer_basic_auth_credential" "basic_auth_credential" {
   password = "password"
 }
 
+resource "kong_upstream" "upstream" {
+  name = "test_upstream"
+  healthchecks = {
+        passive {
+            healthy {
+                http_statuses = [ 200 ],
+                successes = 5
+            },
+            unhealthy {
+                http_failures = 10,
+                http_statuses = [ 404, 500, 503 ],
+                tcp_failures = 10,
+                timeouts = 5
+            }
+        }
+    }
+}
+
+resource "kong_target" "target" {
+  upstream = "${kong_upstream.upstream.id}"
+  target = "www.google.com"
+}

@@ -8,17 +8,70 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+func ValidateHTTPStatuses(httpstatuses []string) {
+
+}
+
+type PassiveHealthy struct {
+	Successes     int       `json:"successes,omitempty"`
+	HttpStatuses  []string  `json:"http_statuses,omitempty"`
+}
+
+type PassiveUnhealthy struct {
+	HttpFailures  int       `json:"http_failures,omitempty"`
+	HttpStatuses  []string  `json:"http_statuses,omitempty"`
+	TcpFailures   int       `json:"tcp_failures,omitempty"`
+	Timeouts      int       `json:"timeout,omitempty"`
+}
+
+type HealthChecksPassive struct {
+	Type       string            `json:"type,omitempty"`
+	Healthy    PassiveHealthy    `json:"healthy,omitempty"`
+	Unhealthy  PassiveUnhealthy  `json:"unhealthy,omitempty"`
+}
+
+type ActiveHealthy struct {
+	Successes     int       `json:"successes,omitempty"`
+	Interval      int       `json:"interval,omitempty"`
+	HttpStatuses  []string  `json:"http_statuses,omitempty"`
+}
+
+type ActiveUnhealthy struct {
+	HttpStatuses  []string  `json:"http_statuses,omitempty"`
+	TcpFailures   int       `json:"tcp_failures,omitempty"`
+	Timeouts      int       `json:"timeouts,omitempty"`
+	HttpFailures  int       `json:"http_failures,omitempty"`
+	Interval      int       `json:"interval,omitempty"`
+}
+
+type HealthChecksActive struct {
+	HttpsVerifyCertificate    bool              `json:"https_verify_certificate,omitempty"`
+	HttpPath                  string            `json:"http_path,omitempty"`
+	Timeout                   int               `json:"timeout,omitempty"`
+	HttpsSni                  string            `json:"https_sni,omitempty"`
+	Concurrency               int               `json:"concurrency,omitempty"`
+	Type                      string            `json:"type,omitempty"`
+	Healthy                   ActiveHealthy     `json:"healthy,omitempty"`
+	Unhealthy                 ActiveUnhealthy   `json:"unhealthy,omitempty"`
+}
+
+type UpstreamHealthChecks struct {
+	Active  HealthChecksActive
+	Passive HealthChecksPassive
+}
+
 type Upstream struct {
-	ID                 string `json:"id,omitempty"`
-	Name               string `json:"name,omitempty"`
-	Slots              int    `json:"slots,omitempty"`
-	HashOn             string `json:"hash_on,omitempty"`
-	HashFallback       string `json:"hash_fallback,omitempty"`
-	HashOnHeader       string `json:"hash_on_header,omitempty"`
-	HashFallbackHeader string `json:"hash_fallback_header,omitempty"`
-	HashOnCookie       string `json:"hash_on_cookie,omitempty"`
-	HashOnCookiePath   string `json:"hash_on_cookie_path,omitempty"`
-	Algorithm          string `json:"algorithm,omitempty"`
+	ID                 string                  `json:"id,omitempty"`
+	Name               string                  `json:"name,omitempty"`
+	Slots              int                     `json:"slots,omitempty"`
+	HashOn             string                  `json:"hash_on,omitempty"`
+	HashFallback       string                  `json:"hash_fallback,omitempty"`
+	HashOnHeader       string                  `json:"hash_on_header,omitempty"`
+	HashFallbackHeader string                  `json:"hash_fallback_header,omitempty"`
+	HashOnCookie       string                  `json:"hash_on_cookie,omitempty"`
+	HashOnCookiePath   string                  `json:"hash_on_cookie_path,omitempty"`
+	Algorithm          string                  `json:"algorithm,omitempty"`
+	HealthChecks       UpstreamHealthChecks    `json:"healthchecks,omitempty"`
 }
 
 func resourceKongUpstream() *schema.Resource {
@@ -107,6 +160,11 @@ func resourceKongUpstream() *schema.Resource {
 
 					return nil, append(errors, fmt.Errorf("algorithm must be one of %v. %s was provided instead.", algs, s))
 				},
+			},
+			"healthchecks": {
+				Type:             schema.TypeMap,
+				Optional:         true,
+				Description:      "Health checks configuration for upstream.",
 			},
 		},
 	}
@@ -205,6 +263,7 @@ func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 		HashOnCookie:       d.Get("hash_on_cookie").(string),
 		HashOnCookiePath:   d.Get("hash_on_cookie_path").(string),
 		Algorithm:          d.Get("algorithm").(string),
+		HealthChecks:       d.Get("healthchecks").(UpstreamHealthChecks),
 	}
 
 	return upstream
@@ -220,4 +279,5 @@ func setUpstreamToResourceData(d *schema.ResourceData, upstream *Upstream) {
 	d.Set("hash_fallback_header", upstream.HashFallbackHeader)
 	d.Set("hash_on_cookie", upstream.HashOnCookie)
 	d.Set("algorithm", upstream.Algorithm)
+    d.Set("healthchecks", upstream.HealthChecks)
 }
