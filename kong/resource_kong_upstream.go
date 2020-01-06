@@ -6,26 +6,25 @@ import (
 
 	"github.com/dghubble/sling"
 	//"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 var (
-	HealthchecksTypes = []string {"http","tcp","https"}
+	HealthchecksTypes = []string{"http", "tcp", "https"}
 )
 
-
 type Upstream struct {
-	ID                 string               `json:"id,omitempty"`
-	Name               string               `json:"name,omitempty"`
-	Slots              int                  `json:"slots,omitempty"`
-	HashOn             string               `json:"hash_on,omitempty"`
-	HashFallback       string               `json:"hash_fallback,omitempty"`
-	HashOnHeader       string               `json:"hash_on_header,omitempty"`
-	HashFallbackHeader string               `json:"hash_fallback_header,omitempty"`
-	HashOnCookie       string               `json:"hash_on_cookie,omitempty"`
-	HashOnCookiePath   string               `json:"hash_on_cookie_path,omitempty"`
-	Algorithm          string               `json:"algorithm,omitempty"`
-	HealthChecks       schema.Resource
+	ID                 string `json:"id,omitempty"`
+	Name               string `json:"name,omitempty"`
+	Slots              int    `json:"slots,omitempty"`
+	HashOn             string `json:"hash_on,omitempty"`
+	HashFallback       string `json:"hash_fallback,omitempty"`
+	HashOnHeader       string `json:"hash_on_header,omitempty"`
+	HashFallbackHeader string `json:"hash_fallback_header,omitempty"`
+	HashOnCookie       string `json:"hash_on_cookie,omitempty"`
+	HashOnCookiePath   string `json:"hash_on_cookie_path,omitempty"`
+	Algorithm          string `json:"algorithm,omitempty"`
+	HealthChecks       []interface{} `json:"healthchecks,omitempty"`
 }
 
 func resourceKongUpstream() *schema.Resource {
@@ -124,103 +123,36 @@ func resourceKongUpstream() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"active": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							ForceNew:    true,
-							MaxItems:    1,
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"https_verify_certificate": {
-										Type:        schema.TypeBool,
-										Optional:    true,
+										Type:     schema.TypeBool,
+										Optional: true,
 									},
 									"http_path": {
-										Type:       schema.TypeString,
-										Optional:   true,
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"timeout": {
-											Type: schema.TypeInt,
-											Optional:true,
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
-									"https_sni":{
-												Type: schema.TypeString,
-												Optional:true,
+									"https_sni": {
+										Type:     schema.TypeString,
+										Optional: true,
 									},
-									"concurrency":{
-													Type: schema.TypeInt,
-													Optional:true,
+									"concurrency": {
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
-									"type":{
-										Type:schema.TypeString,
-										Optional:true,
-										ExactlyOneOf: HealthchecksTypes,
-									},
-									"healthy":{
-										Type:        schema.TypeList,
-										Optional:    true,
-										ForceNew:    true,
-										MaxItems:    1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"successes":{
-													Type:schema.TypeInt,
-													Optional:true,
-												},
-												"interval":{
-													Type:schema.TypeInt,
-													Optional:true,
-												},
-												"http_statuses":{
-														Type:schema.TypeString,
-														Optional:true,
-												},
-											},
-										},
-									},
-									"unhealthy":{
-										Type:schema.TypeList,
-										Optional:true,
-										ForceNew:true,
-										MaxItems:    1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"http_statuses":{
-													Type:schema.TypeString,
-													Optional:true,
-												},
-												"tcp_failures":{
-													Type:schema.TypeInt,
-													Optional:true,
-												},
-												"timeouts":{
-													Type:schema.TypeInt,
-													Optional:true,
-												},
-												"http_failures":{
-													Type:schema.TypeInt,
-													Optional:true,
-												},
-												"interval":{
-													Type:schema.TypeInt,
-													Optional:true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"passive": {
-							Type:schema.TypeString,
-							Optional:true,
-							ForceNew:    true,
-							MaxItems:    1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"type":{
-										Type:schema.TypeString,
-										Optional:true,
-										ExactlyOneOf: HealthchecksTypes,
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										//ExactlyOneOf: HealthchecksTypes,
 									},
 									"healthy": {
 										Type:     schema.TypeList,
@@ -229,13 +161,18 @@ func resourceKongUpstream() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"successes":{
-													Type:schema.TypeInt,
-													Optional:true,
+												"successes": {
+													Type:     schema.TypeInt,
+													Optional: true,
 												},
-												"http_statuses":{
-													Type:schema.TypeString,
-													Optional:true,
+												"interval": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"http_statuses": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     schema.TypeString,
 												},
 											},
 										},
@@ -247,21 +184,87 @@ func resourceKongUpstream() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"http_failures":{
-													Type:schema.TypeInt,
-													Optional:true,
+												"http_statuses": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     schema.TypeString,
 												},
-												"http_statuses":{
-													Type:schema.TypeString,
-													Optional:true,
+												"tcp_failures": {
+													Type:     schema.TypeInt,
+													Optional: true,
 												},
-												"tcp_failures":{
-													Type:schema.TypeInt,
-													Optional:true,
+												"timeouts": {
+													Type:     schema.TypeInt,
+													Optional: true,
 												},
-												"timeout":{
-													Type:schema.TypeInt,
-													Optional:true,
+												"http_failures": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"interval": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"passive": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										//ExactlyOneOf: HealthchecksTypes,
+									},
+									"healthy": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"successes": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"http_statuses": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     schema.TypeString,
+												},
+											},
+										},
+									},
+									"unhealthy": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"http_failures": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"http_statuses": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     schema.TypeString,
+												},
+												"tcp_failures": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"timeout": {
+													Type:     schema.TypeInt,
+													Optional: true,
 												},
 											},
 										},
@@ -304,7 +307,7 @@ func resourceKongUpstreamRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, Error := Sling.New().Path("upstreams/").Get(upstream.ID).ReceiveSuccess(upstream)
 	if Error != nil {
-		return fmt.Errorf("Error while updating upstream")
+		return fmt.Errorf(Error.Error()) //fmt.Errorf("Error while updating upstream")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -328,7 +331,7 @@ func resourceKongUpstreamUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	response, Error := Sling.New().BodyJSON(upstream).Path("upstreams/").Patch(upstream.ID).ReceiveSuccess(updatedUpstream)
 	if Error != nil {
-		return fmt.Errorf("Error while updating upstream")
+		return fmt.Errorf(Error.Error())//fmt.Errorf("Error while updating upstream")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -369,7 +372,7 @@ func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 		HashOnCookie:       d.Get("hash_on_cookie").(string),
 		HashOnCookiePath:   d.Get("hash_on_cookie_path").(string),
 		Algorithm:          d.Get("algorithm").(string),
-		HealthChecks:       d.Get("healthchecks").(schema.Resource),
+		HealthChecks:       d.Get("healthchecks").([]interface{}),
 	}
 
 	return upstream
