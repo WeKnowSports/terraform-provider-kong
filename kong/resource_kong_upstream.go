@@ -5,9 +5,30 @@ import (
 	"net/http"
 
 	"github.com/dghubble/sling"
-	//"github.com/hashicorp/terraform/helper/schema"
+
 	"github.com/hashicorp/terraform/helper/schema"
+	"encoding/json"
+	"os"
 )
+
+func logFile(s string) {  
+    f, err := os.OpenFile("log.txt", os.O_APPEND|os.O_WRONLY, 0644)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    _, err = fmt.Fprintln(f, s)
+    if err != nil {
+        fmt.Println(err)
+                f.Close()
+        return
+    }
+    err = f.Close()
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+}
 
 var (
 	HealthchecksTypes = []string{"http", "tcp", "https"}
@@ -57,8 +78,8 @@ type HealthChecksActive struct {
 }
 
 type UpstreamHealthChecks struct {
-	Active  HealthChecksActive
-	Passive HealthChecksPassive
+	Active  HealthChecksActive   `json:"active,omitempty"`
+	Passive HealthChecksPassive  `json:"passive,omitempty"`
 }
 
 type Upstream struct {
@@ -76,6 +97,7 @@ type Upstream struct {
 }
 
 func resourceKongUpstream() *schema.Resource {
+	logFile("resourceKongUpstream")
 	return &schema.Resource{
 		Create: resourceKongUpstreamCreate,
 		Read:   resourceKongUpstreamRead,
@@ -163,16 +185,16 @@ func resourceKongUpstream() *schema.Resource {
 				},
 			},
 			"healthchecks": {
-				Type:        schema.TypeMap,
+				Type:        schema.TypeSet,
 				Optional:    true,
-				ForceNew:    true,
+				MaxItems: 1,
 				Description: "Health checks configuration for upstream.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"active": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeSet,
 							Optional: true,
-							ForceNew: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"https_verify_certificate": {
@@ -201,9 +223,9 @@ func resourceKongUpstream() *schema.Resource {
 										//ExactlyOneOf: HealthchecksTypes,
 									},
 									"healthy": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeSet,
 										Optional: true,
-										ForceNew: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"successes": {
@@ -223,9 +245,9 @@ func resourceKongUpstream() *schema.Resource {
 										},
 									},
 									"unhealthy": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeSet,
 										Optional: true,
-										ForceNew: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"http_statuses": {
@@ -256,9 +278,9 @@ func resourceKongUpstream() *schema.Resource {
 							},
 						},
 						"passive": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeSet,
 							Optional: true,
-							ForceNew: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
@@ -267,45 +289,49 @@ func resourceKongUpstream() *schema.Resource {
 										//ExactlyOneOf: HealthchecksTypes,
 									},
 									"healthy": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeSet,
 										Optional: true,
-										ForceNew: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"successes": {
-													Type:     schema.TypeInt,
-													Optional: true,
+													Type:      schema.TypeInt,
+													Optional:  true,
 												},
 												"http_statuses": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     schema.TypeString,
+													Type:      schema.TypeList,
+													Optional:  true,
+													Elem: &schema.Schema{
+														Type:  schema.TypeString,
+													},
 												},
 											},
 										},
 									},
 									"unhealthy": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeSet,
 										Optional: true,
-										ForceNew: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"http_failures": {
-													Type:     schema.TypeInt,
-													Optional: true,
+													Type:      schema.TypeInt,
+													Optional:  true,
 												},
 												"http_statuses": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     schema.TypeString,
+													Type:      schema.TypeList,
+													Optional:  true,
+													Elem: &schema.Schema{
+														Type:  schema.TypeString,
+													},
 												},
 												"tcp_failures": {
-													Type:     schema.TypeInt,
-													Optional: true,
+													Type:      schema.TypeInt,
+													Optional:  true,
 												},
 												"timeout": {
-													Type:     schema.TypeInt,
-													Optional: true,
+													Type:      schema.TypeInt,
+													Optional:  true,
 												},
 											},
 										},
@@ -321,6 +347,7 @@ func resourceKongUpstream() *schema.Resource {
 }
 
 func resourceKongUpstreamCreate(d *schema.ResourceData, meta interface{}) error {
+	logFile("resourceKongUpstreamCreate")
 	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
@@ -342,6 +369,7 @@ func resourceKongUpstreamCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceKongUpstreamRead(d *schema.ResourceData, meta interface{}) error {
+	logFile("resourceKongUpstreamRead")
 	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
@@ -364,12 +392,19 @@ func resourceKongUpstreamRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKongUpstreamUpdate(d *schema.ResourceData, meta interface{}) error {
+	logFile("resourceKongUpstreamUpdate")
 	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
 
 	updatedUpstream := getUpstreamFromResourceData(d)
 
+	//out, err := json.Marshal(upstream)
+	//if err != nil {
+	//	panic (err)
+	//}
+	logFile("!!!!!!")
+	
 	response, Error := Sling.New().BodyJSON(upstream).Path("upstreams/").Patch(upstream.ID).ReceiveSuccess(updatedUpstream)
 	if Error != nil {
 		return fmt.Errorf(Error.Error())//fmt.Errorf("Error while updating upstream")
@@ -385,6 +420,7 @@ func resourceKongUpstreamUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceKongUpstreamDelete(d *schema.ResourceData, meta interface{}) error {
+	logFile("resourceKongUpstreamDelete")
 	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
@@ -401,20 +437,38 @@ func resourceKongUpstreamDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func setHealthCheck(u UpstreamHealthChecks) map[string]interface{} {
+func setHealthCheck(u UpstreamHealthChecks) *map[string]interface{} {
 	m := make(map[string]interface{})
-	active := make(map[string]interface{})
-	passive := make(map[string]interface{})
-	active["healthy"] = u.Active.Healthy
-	active["unhealthy"] = u.Active.Unhealthy
-	passive["healthy"] = u.Passive.Healthy
-	passive["unhealthy"] = u.Passive.Unhealthy
-	m["active"] = active
-	m["passive"] = passive
-	return m
+	//active := make(map[string]interface{})
+	//passive := make(map[string]interface{})
+	//active["healthy"] = u.Active.Healthy
+	//active["unhealthy"] = u.Active.Unhealthy
+	//passive["healthy"] = u.Passive.Healthy
+	//passive["unhealthy"] = u.Passive.Unhealthy
+	//m["active"] = active
+	//m["passive"] = passive
+	out, err := json.Marshal(u)
+	 if err != nil {
+		panic (err)
+	}
+	logFile("setHealthCheck")
+	logFile(string(out))
+	return &m
+}
+
+func getHealthCheck(d *schema.ResourceData) UpstreamHealthChecks {
+	u := UpstreamHealthChecks{}
+	out, err := json.Marshal(u)
+	 if err != nil {
+		panic (err)
+	}
+	logFile(string(out))
+	logFile("getHealthCheck")
+	return u
 }
 
 func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
+	logFile("getUpstreamFromResourceData")
 	upstream := &Upstream{
 		ID:                 d.Id(),
 		Name:               d.Get("name").(string),
@@ -426,13 +480,14 @@ func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 		HashOnCookie:       d.Get("hash_on_cookie").(string),
 		HashOnCookiePath:   d.Get("hash_on_cookie_path").(string),
 		Algorithm:          d.Get("algorithm").(string),
-		HealthChecks:       d.Get("healthchecks").(UpstreamHealthChecks),
+		HealthChecks:       getHealthCheck(d),
 	}
 
 	return upstream
 }
 
 func setUpstreamToResourceData(d *schema.ResourceData, upstream *Upstream) {
+	logFile("setUpstreamToResourceData")
 	d.SetId(upstream.ID)
 	d.Set("name", upstream.Name)
 	d.Set("slots", upstream.Slots)
