@@ -99,9 +99,10 @@ func resourceKongUpstream() *schema.Resource {
 				Computed:    true,
 				Description: "Which load balancing algorithm to use. One of: round-robin, consistent-hashing, or least-connections. Defaults to \"round-robin\". Kong 1.3.0 and up.",
 				ValidateFunc: func(i interface{}, s string) (strings []string, errors []error) {
+					a := i.(string)
 					algs := []string{"round-robin", "consistent-hashing", "least-connections"}
 					for i := 0; i < len(algs); i++ {
-						if algs[i] == s {
+						if algs[i] == a {
 							return nil, nil
 						}
 					}
