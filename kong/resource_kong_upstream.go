@@ -96,6 +96,7 @@ func resourceKongUpstream() *schema.Resource {
 			"algorithm": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Which load balancing algorithm to use. One of: round-robin, consistent-hashing, or least-connections. Defaults to \"round-robin\". Kong 1.3.0 and up.",
 				ValidateFunc: func(i interface{}, s string) (strings []string, errors []error) {
 					algs := []string{"round-robin", "consistent-hashing", "least-connections"}
