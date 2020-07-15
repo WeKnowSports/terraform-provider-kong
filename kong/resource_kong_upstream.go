@@ -5,20 +5,74 @@ import (
 	"net/http"
 
 	"github.com/dghubble/sling"
+
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+var (
+	HealthchecksTypes = []string{"http", "tcp", "https"}
+)
+
+type PassiveHealthy struct {
+	Successes    int   `json:"successes,omitempty"`
+	HttpStatuses []int `json:"http_statuses,omitempty"`
+}
+
+type PassiveUnhealthy struct {
+	HttpFailures int   `json:"http_failures,omitempty"`
+	HttpStatuses []int `json:"http_statuses,omitempty"`
+	TcpFailures  int   `json:"tcp_failures,omitempty"`
+	Timeouts     int   `json:"timeouts,omitempty"`
+}
+
+type HealthChecksPassive struct {
+	Type      string            `json:"type,omitempty"`
+	Healthy   *PassiveHealthy   `json:"healthy,omitempty"`
+	Unhealthy *PassiveUnhealthy `json:"unhealthy,omitempty"`
+}
+
+type ActiveHealthy struct {
+	Successes    int   `json:"successes,omitempty"`
+	Interval     int   `json:"interval,omitempty"`
+	HttpStatuses []int `json:"http_statuses,omitempty"`
+}
+
+type ActiveUnhealthy struct {
+	HttpStatuses []int `json:"http_statuses,omitempty"`
+	TcpFailures  int   `json:"tcp_failures,omitempty"`
+	Timeouts     int   `json:"timeouts,omitempty"`
+	HttpFailures int   `json:"http_failures,omitempty"`
+	Interval     int   `json:"interval,omitempty"`
+}
+
+type HealthChecksActive struct {
+	HttpsVerifyCertificate bool             `json:"https_verify_certificate,omitempty"`
+	HttpPath               string           `json:"http_path,omitempty"`
+	Timeout                int              `json:"timeout,omitempty"`
+	HttpsSni               *string          `json:"https_sni,omitempty"`
+	Concurrency            int              `json:"concurrency,omitempty"`
+	Type                   string           `json:"type,omitempty"`
+	Healthy                *ActiveHealthy   `json:"healthy,omitempty"`
+	Unhealthy              *ActiveUnhealthy `json:"unhealthy,omitempty"`
+}
+
+type UpstreamHealthChecks struct {
+	Active  *HealthChecksActive  `json:"active,omitempty"`
+	Passive *HealthChecksPassive `json:"passive,omitempty"`
+}
+
 type Upstream struct {
-	ID                 string `json:"id,omitempty"`
-	Name               string `json:"name,omitempty"`
-	Slots              int    `json:"slots,omitempty"`
-	HashOn             string `json:"hash_on,omitempty"`
-	HashFallback       string `json:"hash_fallback,omitempty"`
-	HashOnHeader       string `json:"hash_on_header,omitempty"`
-	HashFallbackHeader string `json:"hash_fallback_header,omitempty"`
-	HashOnCookie       string `json:"hash_on_cookie,omitempty"`
-	HashOnCookiePath   string `json:"hash_on_cookie_path,omitempty"`
-	Algorithm          string `json:"algorithm,omitempty"`
+	ID                 string                `json:"id,omitempty"`
+	Name               string                `json:"name,omitempty"`
+	Slots              int                   `json:"slots,omitempty"`
+	HashOn             string                `json:"hash_on,omitempty"`
+	HashFallback       string                `json:"hash_fallback,omitempty"`
+	HashOnHeader       string                `json:"hash_on_header,omitempty"`
+	HashFallbackHeader string                `json:"hash_fallback_header,omitempty"`
+	HashOnCookie       string                `json:"hash_on_cookie,omitempty"`
+	HashOnCookiePath   string                `json:"hash_on_cookie_path,omitempty"`
+	Algorithm          string                `json:"algorithm,omitempty"`
+	HealthChecks       *UpstreamHealthChecks `json:"healthchecks,omitempty"`
 }
 
 func resourceKongUpstream() *schema.Resource {
@@ -107,7 +161,192 @@ func resourceKongUpstream() *schema.Resource {
 						}
 					}
 
-					return nil, append(errors, fmt.Errorf("algorithm must be one of %v. %s was provided instead.", algs, s))
+					return nil, append(errors, fmt.Errorf("algorithm must be one of %v. %s was provided instead", algs, s))
+				},
+			},
+			"healthchecks": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"active": &schema.Schema{
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+										// Kong 1.0.0+
+										// Default:  "http",
+									},
+									"timeout": &schema.Schema{
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  1,
+									},
+									"concurrency": &schema.Schema{
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  10,
+									},
+									"http_path": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "/",
+									},
+									"https_verify_certificate": &schema.Schema{
+										Type:     schema.TypeBool,
+										Optional: true,
+										// Kong 1.0.0+
+										// Default:  true,
+									},
+									"https_sni": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+										// Kong 1.0.0+
+										// Default:  nil,
+									},
+									"healthy": &schema.Schema{
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"interval": &schema.Schema{
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+												"http_statuses": &schema.Schema{
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeInt,
+													},
+												},
+												"successes": &schema.Schema{
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"unhealthy": &schema.Schema{
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"interval": &schema.Schema{
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+												"http_statuses": &schema.Schema{
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeInt,
+													},
+												},
+												"tcp_failures": &schema.Schema{
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+												"http_failures": &schema.Schema{
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+												"timeouts": &schema.Schema{
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"passive": &schema.Schema{
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+										// Kong 1.0.0+
+										// Default:  "http",
+									},
+									"healthy": &schema.Schema{
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"http_statuses": &schema.Schema{
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeInt,
+													},
+												},
+												"successes": &schema.Schema{
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"unhealthy": &schema.Schema{
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"http_statuses": &schema.Schema{
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeInt,
+													},
+												},
+												"tcp_failures": &schema.Schema{
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"http_failures": &schema.Schema{
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"timeouts": &schema.Schema{
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -115,14 +354,14 @@ func resourceKongUpstream() *schema.Resource {
 }
 
 func resourceKongUpstreamCreate(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
 
 	createdUpstream := getUpstreamFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(upstream).Post("upstreams/").ReceiveSuccess(createdUpstream)
-	if error != nil {
+	response, Error := Sling.New().BodyJSON(upstream).Post("upstreams/").ReceiveSuccess(createdUpstream)
+	if Error != nil {
 		return fmt.Errorf("Error while creating upstream.")
 	}
 
@@ -136,13 +375,13 @@ func resourceKongUpstreamCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceKongUpstreamRead(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
 
-	response, error := sling.New().Path("upstreams/").Get(upstream.ID).ReceiveSuccess(upstream)
-	if error != nil {
-		return fmt.Errorf("Error while updating upstream.")
+	response, Error := Sling.New().Path("upstreams/").Get(upstream.ID).ReceiveSuccess(upstream)
+	if Error != nil {
+		return fmt.Errorf(Error.Error()) //fmt.Errorf("Error while updating upstream")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -158,15 +397,14 @@ func resourceKongUpstreamRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKongUpstreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
-
 	updatedUpstream := getUpstreamFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(upstream).Path("upstreams/").Patch(upstream.ID).ReceiveSuccess(updatedUpstream)
-	if error != nil {
-		return fmt.Errorf("Error while updating upstream")
+	response, Error := Sling.New().BodyJSON(upstream).Path("upstreams/").Patch(upstream.ID).ReceiveSuccess(updatedUpstream)
+	if Error != nil {
+		return fmt.Errorf(Error.Error()) //fmt.Errorf("Error while updating upstream")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -179,17 +417,204 @@ func resourceKongUpstreamUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceKongUpstreamDelete(d *schema.ResourceData, meta interface{}) error {
-	sling := meta.(*sling.Sling)
+	Sling := meta.(*sling.Sling)
 
 	upstream := getUpstreamFromResourceData(d)
 
-	response, error := sling.New().Path("upstreams/").Delete(upstream.ID).ReceiveSuccess(nil)
-	if error != nil {
-		return fmt.Errorf("Error while deleting upstream.")
+	response, Error := Sling.New().Path("upstreams/").Delete(upstream.ID).ReceiveSuccess(nil)
+	if Error != nil {
+		return fmt.Errorf("Error while deleting upstream")
 	}
 
 	if response.StatusCode != http.StatusNoContent {
 		return fmt.Errorf(response.Status)
+	}
+
+	return nil
+}
+
+func getActiveHealthyFromMap(d *map[string]interface{}) *ActiveHealthy {
+	if d != nil {
+		m := *d
+		healthy := &ActiveHealthy{}
+
+		if m["interval"] != nil {
+			healthy.Interval = m["interval"].(int)
+		}
+		if m["http_statuses"] != nil {
+			healthy.HttpStatuses = readIntArrayFromInterface(m["http_statuses"])
+		}
+		if m["successes"] != nil {
+			healthy.Successes = m["successes"].(int)
+		}
+
+		return healthy
+	}
+	return nil
+}
+
+func getActiveUnhealthyFromMap(d *map[string]interface{}) *ActiveUnhealthy {
+	if d != nil {
+		m := *d
+		unhealthy := &ActiveUnhealthy{}
+
+		if m["interval"] != nil {
+			unhealthy.Interval = m["interval"].(int)
+		}
+		if m["http_statuses"] != nil {
+			unhealthy.HttpStatuses = readIntArrayFromInterface(m["http_statuses"])
+		}
+		if m["tcp_failures"] != nil {
+			unhealthy.TcpFailures = m["tcp_failures"].(int)
+		}
+		if m["http_failures"] != nil {
+			unhealthy.HttpFailures = m["http_failures"].(int)
+		}
+		if m["timeouts"] != nil {
+			unhealthy.Timeouts = m["timeouts"].(int)
+		}
+
+		return unhealthy
+	}
+	return nil
+}
+
+func getActiveHealthChecksFromMap(d *map[string]interface{}) *HealthChecksActive {
+	if d != nil {
+		m := *d
+		active := &HealthChecksActive{}
+
+		if m["type"] != nil {
+			active.Type = m["type"].(string)
+		}
+		if m["timeout"] != nil {
+			active.Timeout = m["timeout"].(int)
+		}
+		if m["concurrency"] != nil {
+			active.Concurrency = m["concurrency"].(int)
+		}
+		if m["http_path"] != nil {
+			active.HttpPath = m["http_path"].(string)
+		}
+		if m["https_verify_certificate"] != nil {
+			active.HttpsVerifyCertificate = m["https_verify_certificate"].(bool)
+		}
+		if m["https_sni"] != nil {
+			if len(m["https_sni"].(string)) != 0 {
+				httpsSni := m["https_sni"].(string)
+				active.HttpsSni = &httpsSni
+			}
+		}
+
+		if m["healthy"] != nil {
+			if healthyArray := m["healthy"].([]interface{}); healthyArray != nil && len(healthyArray) > 0 {
+				healthyMap := healthyArray[0].(map[string]interface{})
+				active.Healthy = getActiveHealthyFromMap(&healthyMap)
+			}
+		}
+
+		if m["unhealthy"] != nil {
+			if unhealthyArray := m["unhealthy"].([]interface{}); unhealthyArray != nil && len(unhealthyArray) > 0 {
+				unhealthyMap := unhealthyArray[0].(map[string]interface{})
+				active.Unhealthy = getActiveUnhealthyFromMap(&unhealthyMap)
+			}
+		}
+
+		return active
+	}
+
+	return nil
+}
+
+func getPassiveHealthyFromMap(d *map[string]interface{}) *PassiveHealthy {
+	if d != nil {
+		m := *d
+		healthy := &PassiveHealthy{}
+
+		if m["http_statuses"] != nil {
+			healthy.HttpStatuses = readIntArrayFromInterface(m["http_statuses"])
+		}
+		if m["successes"] != nil {
+			healthy.Successes = m["successes"].(int)
+		}
+
+		return healthy
+	}
+	return nil
+}
+
+func getPassiveUnhealthyFromMap(d *map[string]interface{}) *PassiveUnhealthy {
+	if d != nil {
+		m := *d
+		unhealthy := &PassiveUnhealthy{}
+
+		if m["http_statuses"] != nil {
+			unhealthy.HttpStatuses = readIntArrayFromInterface(m["http_statuses"])
+		}
+		if m["tcp_failures"] != nil {
+			unhealthy.TcpFailures = m["tcp_failures"].(int)
+		}
+		if m["http_failures"] != nil {
+			unhealthy.HttpFailures = m["http_failures"].(int)
+		}
+		if m["timeouts"] != nil {
+			unhealthy.Timeouts = m["timeouts"].(int)
+		}
+
+		return unhealthy
+	}
+	return nil
+}
+
+func getPassiveHealthsCheckFromMap(d *map[string]interface{}) *HealthChecksPassive {
+	if d != nil {
+		m := *d
+		passive := &HealthChecksPassive{}
+
+		if m["type"] != nil {
+			passive.Type = m["type"].(string)
+		}
+
+		if m["healthy"] != nil {
+			if healthyArray := m["healthy"].([]interface{}); healthyArray != nil && len(healthyArray) > 0 {
+				healthyMap := healthyArray[0].(map[string]interface{})
+				passive.Healthy = getPassiveHealthyFromMap(&healthyMap)
+			}
+		}
+
+		if m["unhealthy"] != nil {
+			if unhealthyArray := m["unhealthy"].([]interface{}); unhealthyArray != nil && len(unhealthyArray) > 0 {
+				unhealthyMap := unhealthyArray[0].(map[string]interface{})
+				passive.Unhealthy = getPassiveUnhealthyFromMap(&unhealthyMap)
+			}
+		}
+
+		return passive
+	}
+
+	return nil
+}
+
+func getHealthChecksFromMap(d *map[string]interface{}) *UpstreamHealthChecks {
+	if d != nil {
+		m := *d
+		healthChecks := &UpstreamHealthChecks{}
+
+		if m["active"] != nil {
+			if activeArray := m["active"].([]interface{}); activeArray != nil && len(activeArray) > 0 {
+				activeMap := activeArray[0].(map[string]interface{})
+				healthChecks.Active = getActiveHealthChecksFromMap(&activeMap)
+			}
+		}
+
+		if m["passive"] != nil {
+			if passiveArray := m["passive"].([]interface{}); passiveArray != nil && len(passiveArray) > 0 {
+				passiveMap := passiveArray[0].(map[string]interface{})
+				healthChecks.Passive = getPassiveHealthsCheckFromMap(&passiveMap)
+			}
+		}
+
+		return healthChecks
 	}
 
 	return nil
@@ -209,7 +634,129 @@ func getUpstreamFromResourceData(d *schema.ResourceData) *Upstream {
 		Algorithm:          d.Get("algorithm").(string),
 	}
 
+	hcArr := d.Get("healthchecks").([]interface{})
+
+	if hcArr != nil && len(hcArr) > 0 {
+		hcMap := hcArr[0].(map[string]interface{})
+		upstream.HealthChecks = getHealthChecksFromMap(&hcMap)
+	}
+
 	return upstream
+}
+
+func convertActiveHealthyToResourceData(ah *ActiveHealthy) []map[string]interface{} {
+	if ah == nil {
+		return []map[string]interface{}{}
+	}
+	m := make(map[string]interface{})
+
+	m["interval"] = ah.Interval
+	m["http_statuses"] = ah.HttpStatuses
+	m["successes"] = ah.Successes
+
+	return []map[string]interface{}{m}
+}
+
+func convertActiveUnhealthyToResource(au *ActiveUnhealthy) []map[string]interface{} {
+	if au == nil {
+		return []map[string]interface{}{}
+	}
+	m := make(map[string]interface{})
+
+	m["interval"] = au.Interval
+	m["http_statuses"] = au.HttpStatuses
+	m["tcp_failures"] = au.TcpFailures
+	m["http_failures"] = au.HttpFailures
+	m["timeouts"] = au.Timeouts
+
+	return []map[string]interface{}{m}
+}
+
+func convertHealthCheckActiveToResourceData(hca *HealthChecksActive) []interface{} {
+	if hca == nil {
+		return []interface{}{}
+	}
+	m := make(map[string]interface{})
+
+	m["type"] = hca.Type
+	m["timeout"] = hca.Timeout
+	m["concurrency"] = hca.Concurrency
+	m["http_path"] = hca.HttpPath
+	m["https_verify_certificate"] = hca.HttpsVerifyCertificate
+
+	if hca.HttpsSni != nil {
+		m["https_sni"] = *hca.HttpsSni
+	}
+	if hca.Healthy != nil {
+		m["healthy"] = convertActiveHealthyToResourceData(hca.Healthy)
+	}
+	if hca.Unhealthy != nil {
+		m["unhealthy"] = convertActiveUnhealthyToResource(hca.Unhealthy)
+	}
+
+	return []interface{}{m}
+}
+
+func convertPassiveHealthyToResourceData(ph *PassiveHealthy) []map[string]interface{} {
+	if ph == nil {
+		return []map[string]interface{}{}
+	}
+	m := make(map[string]interface{})
+
+	m["http_statuses"] = ph.HttpStatuses
+	m["successes"] = ph.Successes
+
+	return []map[string]interface{}{m}
+}
+
+func convertPassiveUnhealthyToResourceData(pu *PassiveUnhealthy) []map[string]interface{} {
+	if pu == nil {
+		return []map[string]interface{}{}
+	}
+	m := make(map[string]interface{})
+
+	m["http_statuses"] = pu.HttpStatuses
+	m["tcp_failures"] = pu.TcpFailures
+	m["http_failures"] = pu.HttpFailures
+	m["timeouts"] = pu.Timeouts
+
+	return []map[string]interface{}{m}
+}
+
+func convertHealthCheckPassiveToResourceData(in *HealthChecksPassive) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	m["type"] = in.Type
+
+	if in.Healthy != nil {
+		m["healthy"] = convertPassiveHealthyToResourceData(in.Healthy)
+	}
+	if in.Unhealthy != nil {
+		m["unhealthy"] = convertPassiveUnhealthyToResourceData(in.Unhealthy)
+	}
+
+	return []interface{}{m}
+}
+
+func convertHealthCheckResourceData(uhc *UpstreamHealthChecks) []interface{} {
+	if uhc == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if uhc.Active != nil {
+		m["active"] = convertHealthCheckActiveToResourceData(uhc.Active)
+	}
+	if uhc.Passive != nil {
+		m["passive"] = convertHealthCheckPassiveToResourceData(uhc.Passive)
+	}
+
+	return []interface{}{m}
 }
 
 func setUpstreamToResourceData(d *schema.ResourceData, upstream *Upstream) {
@@ -222,4 +769,19 @@ func setUpstreamToResourceData(d *schema.ResourceData, upstream *Upstream) {
 	d.Set("hash_fallback_header", upstream.HashFallbackHeader)
 	d.Set("hash_on_cookie", upstream.HashOnCookie)
 	d.Set("algorithm", upstream.Algorithm)
+	d.Set("healthchecks", convertHealthCheckResourceData(upstream.HealthChecks))
+}
+
+func readIntArrayFromInterface(in interface{}) []int {
+	if arr := in.([]interface{}); arr != nil {
+		array := make([]int, len(arr))
+		for i, x := range arr {
+			item := x.(int)
+			array[i] = item
+		}
+
+		return array
+	}
+
+	return []int{}
 }
