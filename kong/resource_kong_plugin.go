@@ -48,18 +48,18 @@ func resourceKongPlugin() *schema.Resource {
 			},
 
 			"config": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     schema.TypeString,
-				Default:  nil,
-				ConflictsWith: []string{ "config_json" },
+				Type:          schema.TypeMap,
+				Optional:      true,
+				Elem:          schema.TypeString,
+				Default:       nil,
+				ConflictsWith: []string{"config_json"},
 			},
 
 			"config_json": {
-				Type: schema.TypeString,
-				Optional: true,
-				Default: nil,
-				ConflictsWith: []string{ "config" },
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       nil,
+				ConflictsWith: []string{"config"},
 			},
 
 			"api": {
@@ -169,12 +169,12 @@ func buildModifyRequest(d *schema.ResourceData, meta interface{}) *sling.Sling {
 	request := meta.(*sling.Sling).New()
 
 	plugin := &Plugin{
-		ID:            d.Id(),
-		Name:          d.Get("name").(string),
-		API:           d.Get("api").(string),
-		Service:       d.Get("service").(string),
-		Route:         d.Get("route").(string),
-		Consumer:      d.Get("consumer").(string),
+		ID:       d.Id(),
+		Name:     d.Get("name").(string),
+		API:      d.Get("api").(string),
+		Service:  d.Get("service").(string),
+		Route:    d.Get("route").(string),
+		Consumer: d.Get("consumer").(string),
 	}
 
 	if c, ok := d.GetOk("config_json"); ok {

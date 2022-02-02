@@ -82,28 +82,28 @@ func resourceKongService() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "The number of retries to execute upon failure to proxy. Default: 5.",
-                Default:     5,
+				Default:     5,
 			},
 
 			"connect_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "The timeout in milliseconds for establishing a connection to the upstream server. Defaults to 60000.",
-                Default:     60000,
+				Default:     60000,
 			},
 
 			"write_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "The timeout in milliseconds between two successive write operations for transmitting a request to the upstream server. Defaults to 60000.",
-                Default:     60000,
+				Default:     60000,
 			},
 
 			"read_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "The timeout in milliseconds between two successive read operations for transmitting a request to the upstream server. Defaults to 60000.",
-                Default:     60000,
+				Default:     60000,
 			},
 
 			"url": {
