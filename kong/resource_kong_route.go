@@ -85,13 +85,6 @@ func resourceKongRoute() *schema.Resource {
 				Description: "When matching a Route via one of the hosts domain names, use the request Host header in the upstream request headers. By default set to false, and the upstream Host header will be that of the Service's host.",
 			},
 
-			"connect_timeout": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     60000,
-				Description: "The timeout in milliseconds for establishing a connection to the upstream server. Defaults to 60000.",
-			},
-
 			"service": {
 				Type:        schema.TypeString,
 				Required:    true,

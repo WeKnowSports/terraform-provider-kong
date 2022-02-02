@@ -81,37 +81,29 @@ func resourceKongService() *schema.Resource {
 			"retries": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Description: "A comma-separated list of HTTP methods that point to your Service. For example: GET,POST. At least one of hosts, uris, or methods should be specified.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return new == "5" || new != old
-				},
+				Description: "The number of retries to execute upon failure to proxy. Default: 5.",
+                Default:     5,
 			},
 
 			"connect_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "The timeout in milliseconds for establishing a connection to the upstream server. Defaults to 60000.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return new == "60000" || new != old
-				},
+                Default:     60000,
 			},
 
 			"write_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "The timeout in milliseconds between two successive write operations for transmitting a request to the upstream server. Defaults to 60000.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return new == "60000" || new != old
-				},
+                Default:     60000,
 			},
 
 			"read_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "The timeout in milliseconds between two successive read operations for transmitting a request to the upstream server. Defaults to 60000.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return new == "60000" || new != old
-				},
+                Default:     60000,
 			},
 
 			"url": {
