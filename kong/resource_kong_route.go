@@ -2,21 +2,23 @@ package kong
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net/http"
 )
 
 // Route : Kong Route request object structure
 type Route struct {
-	ID           string   `json:"id,omitempty"`
-	Protocols    []string `json:"protocols,omitempty"`
-	Methods      []string `json:"methods"`
-	Hosts        []string `json:"hosts"`
-	Paths        []string `json:"paths"`
-	StripPath    bool     `json:"strip_path,omitempty"`
-	PreserveHost bool     `json:"preserve_host,omitempty"`
-	Service      Service  `json:"service,omitempty"`
+	ID           string              `json:"id,omitempty"`
+	Protocols    []string            `json:"protocols,omitempty"`
+	Methods      []string            `json:"methods"`
+	Hosts        []string            `json:"hosts"`
+	Paths        []string            `json:"paths"`
+	StripPath    bool                `json:"strip_path,omitempty"`
+	PreserveHost bool                `json:"preserve_host,omitempty"`
+	Headers      map[string][]string `json:"headers,omitempty"`
+	Service      Service             `json:"service,omitempty"`
 }
 
 func resourceKongRoute() *schema.Resource {
@@ -89,6 +91,27 @@ func resourceKongRoute() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The Service this Route is associated to. This is where the Route proxies traffic to.",
+			},
+			"header": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+				Description: "One or more lists of values indexed by header name that will cause this Route to match if present in the request.",
 			},
 		},
 	}
@@ -189,6 +212,7 @@ func getRouteFromResourceData(d *schema.ResourceData) *Route {
 		Paths:        convertInterfaceArrToStrings(d.Get("paths").([]interface{})),
 		StripPath:    d.Get("strip_path").(bool),
 		PreserveHost: d.Get("preserve_host").(bool),
+		Headers:      readMapStringArrayFromResource(d, "header"),
 		Service: Service{
 			ID: d.Get("service").(string),
 		},
@@ -214,4 +238,25 @@ func convertInterfaceArrToStrings(strs []interface{}) []string {
 		arr[i] = str.(string)
 	}
 	return arr
+}
+
+func readMapStringArrayFromResource(d *schema.ResourceData, key string) map[string][]string {
+	results := map[string][]string{}
+	if attr, ok := d.GetOk(key); ok {
+		set := attr.(*schema.Set)
+		for _, item := range set.List() {
+			m := item.(map[string]interface{})
+			if name, ok := m["name"].(string); ok {
+				if values, ok := m["values"].([]interface{}); ok {
+					var vals []string
+					for _, v := range values {
+						vals = append(vals, v.(string))
+					}
+					results[name] = vals
+				}
+			}
+		}
+	}
+
+	return results
 }
