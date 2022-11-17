@@ -8,10 +8,10 @@ on:
     branches: [ "master" ]
     tags:
       - 'v*'
-  pull_request:
-    branches: [ "master" ]
-    tags:
-      - 'v*'
+#  pull_request:
+#    branches: [ "master" ]
+#    tags:
+#      - 'v*'
 
 jobs:
 
@@ -37,11 +37,11 @@ jobs:
       run: |
         go vet ./...
 #        go lint ./...
-    - name: Install staticcheck
-      run: go install honnef.co/go/tools/cmd/staticcheck@latest
+#    - name: Install staticcheck
+#      run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
-    - name: Run staticcheck
-      run: staticcheck ./...
+#    - name: Run staticcheck
+#      run: staticcheck ./...
 
     - name: Test
       run: go test -v ./...
