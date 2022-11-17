@@ -27,4 +27,8 @@ docker-compose up -d
 
 ## Example usage
 
-Please refer to terraform/tests
+Please refer to terraform/tests 
+
+Status of Last Deployment:<br>
+<img src="https://github.com/freddy-dov/terraform-provider-kong/workflows/Go/bage.svg?branch=master"><br>
+
