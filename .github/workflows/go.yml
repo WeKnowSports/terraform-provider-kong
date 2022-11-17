@@ -35,8 +35,8 @@ jobs:
 
     - name: Run vet & lint
       run: |
-        go vet .
-        golint .
+        go vet ./...
+#        go lint ./...
 
     - name: Test
       run: go test -v ./...
