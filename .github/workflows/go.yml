@@ -28,6 +28,11 @@ jobs:
     - name: Build
       run: go build -v ./...
 
+    - name: Run vet & lint
+      run: |
+        go vet .
+        golint .
+
     - name: Test
       run: go test -v ./...
       
