@@ -31,12 +31,12 @@ jobs:
     - name: Run vet & lint
       run: |
         go vet ./...
-        
-#    - name: Install staticcheck
-#      run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
-#    - name: Run staticcheck
-#      run: staticcheck ./...
+    - name: Install staticcheck
+      run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+    - name: Run staticcheck
+      run: staticcheck ./...
 
     - name: Test
       run: go test -v ./...
