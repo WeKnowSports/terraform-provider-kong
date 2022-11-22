@@ -32,6 +32,17 @@ jobs:
       run: |
         go vet ./...
 
+    - name: Lint Code Base
+      uses: github/super-linter@v4.9.2
+      env:
+        VALIDATE_ALL_CODEBASE: false
+        DEFAULT_BRANCH: master
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        LINTER_RULES_PATH: '.'
+        MARKDOWN_CONFIG_FILE: .markdownlint.yml
+        VALIDATE_MARKDOWN: true
+        VALIDATE_BASH: true
+
     - name: Install staticcheck
       run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
