@@ -164,66 +164,66 @@ func resourceKongUpstream() *schema.Resource {
 					return nil, append(errors, fmt.Errorf("algorithm must be one of %v. %s was provided instead", algs, s))
 				},
 			},
-			"healthchecks": &schema.Schema{
+			"healthchecks": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"active": &schema.Schema{
+						"active": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": &schema.Schema{
+									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
 										// Kong 1.0.0+
 										// Default:  "http",
 									},
-									"timeout": &schema.Schema{
+									"timeout": {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Default:  1,
 									},
-									"concurrency": &schema.Schema{
+									"concurrency": {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Default:  10,
 									},
-									"http_path": &schema.Schema{
+									"http_path": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "/",
 									},
-									"https_verify_certificate": &schema.Schema{
+									"https_verify_certificate": {
 										Type:     schema.TypeBool,
 										Optional: true,
 										// Kong 1.0.0+
 										// Default:  true,
 									},
-									"https_sni": &schema.Schema{
+									"https_sni": {
 										Type:     schema.TypeString,
 										Optional: true,
 										// Kong 1.0.0+
 										// Default:  nil,
 									},
-									"healthy": &schema.Schema{
+									"healthy": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"interval": &schema.Schema{
+												"interval": {
 													Type:     schema.TypeInt,
 													Optional: true,
 													Computed: true,
 												},
-												"http_statuses": &schema.Schema{
+												"http_statuses": {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
@@ -231,7 +231,7 @@ func resourceKongUpstream() *schema.Resource {
 														Type: schema.TypeInt,
 													},
 												},
-												"successes": &schema.Schema{
+												"successes": {
 													Type:     schema.TypeInt,
 													Optional: true,
 													Computed: true,
@@ -239,19 +239,19 @@ func resourceKongUpstream() *schema.Resource {
 											},
 										},
 									},
-									"unhealthy": &schema.Schema{
+									"unhealthy": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"interval": &schema.Schema{
+												"interval": {
 													Type:     schema.TypeInt,
 													Optional: true,
 													Computed: true,
 												},
-												"http_statuses": &schema.Schema{
+												"http_statuses": {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
@@ -259,17 +259,17 @@ func resourceKongUpstream() *schema.Resource {
 														Type: schema.TypeInt,
 													},
 												},
-												"tcp_failures": &schema.Schema{
+												"tcp_failures": {
 													Type:     schema.TypeInt,
 													Optional: true,
 													Computed: true,
 												},
-												"http_failures": &schema.Schema{
+												"http_failures": {
 													Type:     schema.TypeInt,
 													Optional: true,
 													Computed: true,
 												},
-												"timeouts": &schema.Schema{
+												"timeouts": {
 													Type:     schema.TypeInt,
 													Optional: true,
 													Computed: true,
@@ -280,63 +280,63 @@ func resourceKongUpstream() *schema.Resource {
 								},
 							},
 						},
-						"passive": &schema.Schema{
+						"passive": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": &schema.Schema{
+									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
 										// Kong 1.0.0+
 										// Default:  "http",
 									},
-									"healthy": &schema.Schema{
+									"healthy": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"http_statuses": &schema.Schema{
+												"http_statuses": {
 													Type:     schema.TypeList,
 													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeInt,
 													},
 												},
-												"successes": &schema.Schema{
+												"successes": {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
 											},
 										},
 									},
-									"unhealthy": &schema.Schema{
+									"unhealthy": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"http_statuses": &schema.Schema{
+												"http_statuses": {
 													Type:     schema.TypeList,
 													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeInt,
 													},
 												},
-												"tcp_failures": &schema.Schema{
+												"tcp_failures": {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
-												"http_failures": &schema.Schema{
+												"http_failures": {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
-												"timeouts": &schema.Schema{
+												"timeouts": {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
