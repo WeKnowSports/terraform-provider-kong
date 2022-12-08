@@ -25,16 +25,13 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"kong_api":                            resourceKongAPI(),
 			"kong_service":                        resourceKongService(),
 			"kong_route":                          resourceKongRoute(),
 			"kong_consumer":                       resourceKongConsumer(),
-			"kong_api_plugin":                     resourceKongPlugin(),
 			"kong_plugin":                         resourceKongPlugin(),
 			"kong_consumer_basic_auth_credential": resourceKongBasicAuthCredential(),
 			"kong_consumer_key_auth_credential":   resourceKongKeyAuthCredential(),
 			"kong_consumer_jwt_credential":        resourceKongJWTCredential(),
-			"kong_api_plugin_key_auth":            resourceKongKeyAuthPlugin(),
 			"kong_consumer_acl_group":             resourceKongConsumerACLGroup(),
 			"kong_certificate":                    resourceKongCertificate(),
 			"kong_sni":                            resourceKongSNI(),

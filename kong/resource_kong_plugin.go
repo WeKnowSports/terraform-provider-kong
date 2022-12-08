@@ -16,7 +16,6 @@ type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
-	API           string                 `json:"-"`
 	Service       string                 `json:"-"`
 	Route         string                 `json:"-"`
 	Consumer      string                 `json:"consumer_id,omitempty"`
@@ -63,26 +62,18 @@ func resourceKongPlugin() *schema.Resource {
 				ConflictsWith: []string{"config"},
 			},
 
-			"api": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Deprecated:    "Use service or route instead.",
-				Default:       nil,
-				ConflictsWith: []string{"service", "route"},
-			},
-
 			"service": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Default:       nil,
-				ConflictsWith: []string{"api", "route"},
+				ConflictsWith: []string{"route"},
 			},
 
 			"route": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Default:       nil,
-				ConflictsWith: []string{"api", "service"},
+				ConflictsWith: []string{"service"},
 			},
 		},
 	}
@@ -92,9 +83,7 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	request := buildModifyRequest(d, meta)
 	p := &Plugin{}
 
-	if api, ok := d.GetOk("api"); ok {
-		request = request.Path("apis/").Path(api.(string) + "/")
-	} else if service, ok := d.GetOk("service"); ok {
+	if service, ok := d.GetOk("service"); ok {
 		request = request.Path("services/").Path(service.(string) + "/")
 	} else if route, ok := d.GetOk("route"); ok {
 		request = request.Path("routes/").Path(route.(string) + "/")
@@ -172,7 +161,6 @@ func buildModifyRequest(d *schema.ResourceData, meta interface{}) *sling.Sling {
 	plugin := &Plugin{
 		ID:       d.Id(),
 		Name:     d.Get("name").(string),
-		API:      d.Get("api").(string),
 		Service:  d.Get("service").(string),
 		Route:    d.Get("route").(string),
 		Consumer: d.Get("consumer").(string),
@@ -215,15 +203,12 @@ func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) error {
 
 	// There are differences in the way service/route IDs are returned from Kong after creation and update between
 	// version before and after 1.0.0. We are risking some drift here. This will be handled in later versions.
-	if api, ok := d.GetOk("api"); ok {
-		plugin.API = api.(string)
-	} else if service, ok := d.GetOk("service"); ok {
+	if service, ok := d.GetOk("service"); ok {
 		plugin.Service = service.(string)
 	} else if route, ok := d.GetOk("route"); ok {
 		plugin.Route = route.(string)
 	}
 
-	_ = d.Set("api", plugin.API)
 	_ = d.Set("service", plugin.Service)
 	_ = d.Set("route", plugin.Route)
 	_ = d.Set("consumer", plugin.Consumer)
