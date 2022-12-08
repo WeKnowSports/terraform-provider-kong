@@ -50,7 +50,7 @@ func resourceKongTargetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Path("upstreams/").Path(target.Upstream + "/").BodyJSON(target).Post("targets/").ReceiveSuccess(createdTarget)
 	if error != nil {
-		return fmt.Errorf("Error while creating target.")
+		return fmt.Errorf("error while creating target")
 	}
 
 	if response.StatusCode != http.StatusCreated {
@@ -74,7 +74,7 @@ func resourceKongTargetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Path("upstreams/").Path(target.Upstream + "/").Path("targets/").Delete(target.ID).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting target.")
+		return fmt.Errorf("error while deleting target")
 	}
 
 	if response.StatusCode != http.StatusNoContent {

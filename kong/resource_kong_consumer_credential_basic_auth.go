@@ -5,10 +5,11 @@ import (
 	"net/http"
 
 	"crypto/sha1"
-	"github.com/dghubble/sling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"io"
 	"strings"
+
+	"github.com/dghubble/sling"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type BasicAuthCredential struct {
@@ -67,7 +68,7 @@ func resourceKongBasicAuthCredentialCreate(d *schema.ResourceData, meta interfac
 
 	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer + "/").Post("basic-auth/").ReceiveSuccess(createdBasicAuthCredential)
 	if error != nil {
-		return fmt.Errorf("Error while creating basicAuthCredential.")
+		return fmt.Errorf("error while creating basicAuthCredential")
 	}
 
 	if response.StatusCode != http.StatusCreated {
@@ -86,7 +87,7 @@ func resourceKongBasicAuthCredentialRead(d *schema.ResourceData, meta interface{
 
 	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer + "/").Path("basic-auth/").Get(basicAuthCredential.ID).ReceiveSuccess(basicAuthCredential)
 	if error != nil {
-		return fmt.Errorf("Error while updating basicAuthCredential.")
+		return fmt.Errorf("error while updating basicAuthCredential")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -110,7 +111,7 @@ func resourceKongBasicAuthCredentialUpdate(d *schema.ResourceData, meta interfac
 
 	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer + "/").Patch("basic-auth/").Path(basicAuthCredential.ID).ReceiveSuccess(updatedBasicAuthCredential)
 	if error != nil {
-		return fmt.Errorf("Error while updating basicAuthCredential.")
+		return fmt.Errorf("error while updating basicAuthCredential")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -129,7 +130,7 @@ func resourceKongBasicAuthCredentialDelete(d *schema.ResourceData, meta interfac
 
 	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer + "/").Path("basic-auth/").Delete(basicAuthCredential.ID).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting basicAuthCredential.")
+		return fmt.Errorf("error while deleting basicAuthCredential")
 	}
 
 	if response.StatusCode != http.StatusNoContent {

@@ -423,7 +423,7 @@ func resourceKongUpstreamDelete(d *schema.ResourceData, meta interface{}) error 
 
 	response, Error := Sling.New().Path("upstreams/").Delete(upstream.ID).ReceiveSuccess(nil)
 	if Error != nil {
-		return fmt.Errorf("Error while deleting upstream")
+		return fmt.Errorf("error while deleting upstream")
 	}
 
 	if response.StatusCode != http.StatusNoContent {

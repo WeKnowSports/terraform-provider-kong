@@ -162,7 +162,7 @@ func resourceKongAPICreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if response.StatusCode == http.StatusConflict {
-		return fmt.Errorf("409 Conflict - use terraform import to manage this api.")
+		return fmt.Errorf("409 Conflict - use terraform import to manage this api")
 	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}

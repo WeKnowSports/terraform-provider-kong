@@ -72,11 +72,11 @@ func resourceKeyAuthPluginCreate(d *schema.ResourceData, meta interface{}) error
 	}
 	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
 	if error != nil {
-		return fmt.Errorf("Error while creating plugin.")
+		return fmt.Errorf("error while creating plugin")
 	}
 
 	if response.StatusCode == http.StatusConflict {
-		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
+		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin")
 	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf(response.Status)
 	}
@@ -93,7 +93,7 @@ func resourceKeyAuthPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
 	if error != nil {
-		return fmt.Errorf("Error while updating plugin.")
+		return fmt.Errorf("error while updating plugin")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -117,7 +117,7 @@ func resourceKeyAuthPluginUpdate(d *schema.ResourceData, meta interface{}) error
 
 	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
 	if error != nil {
-		return fmt.Errorf("Error while updating plugin.")
+		return fmt.Errorf("error while updating plugin")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -136,7 +136,7 @@ func resourceKeyAuthPluginDelete(d *schema.ResourceData, meta interface{}) error
 
 	response, error := sling.New().Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting plugin.")
+		return fmt.Errorf("error while deleting plugin")
 	}
 
 	if response.StatusCode != http.StatusNoContent {

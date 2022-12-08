@@ -52,11 +52,11 @@ func resourceKongConsumerCreate(d *schema.ResourceData, meta interface{}) error 
 
 	response, error := sling.New().BodyJSON(consumer).Post("consumers/").ReceiveSuccess(createdConsumer)
 	if error != nil {
-		return fmt.Errorf("Error while creating consumer.")
+		return fmt.Errorf("error while creating consumer")
 	}
 
 	if response.StatusCode == http.StatusConflict {
-		return fmt.Errorf("409 Conflict - use terraform import to manage this consumer.")
+		return fmt.Errorf("409 Conflict - use terraform import to manage this consumer")
 	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf(response.Status)
 	}
@@ -74,7 +74,7 @@ func resourceKongConsumerRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Path("consumers/").Get(id).ReceiveSuccess(consumer)
 	if error != nil {
-		return fmt.Errorf("Error while updating consumer.")
+		return fmt.Errorf("error while updating consumer")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -98,7 +98,7 @@ func resourceKongConsumerUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	response, error := sling.New().BodyJSON(consumer).Patch("consumers/").Path(consumer.ID).ReceiveSuccess(updatedConsumer)
 	if error != nil {
-		return fmt.Errorf("Error while updating consumer.")
+		return fmt.Errorf("error while updating consumer")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -117,7 +117,7 @@ func resourceKongConsumerDelete(d *schema.ResourceData, meta interface{}) error 
 
 	response, error := sling.New().Delete("consumers/").Path(id).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting consumer.")
+		return fmt.Errorf("error while deleting consumer")
 	}
 
 	if response.StatusCode != http.StatusNoContent {

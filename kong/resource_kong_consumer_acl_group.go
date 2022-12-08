@@ -44,7 +44,7 @@ func resourceKongConsumerACLGroupCreate(d *schema.ResourceData, meta interface{}
 
 	response, error := sling.New().BodyJSON(consumerACLGroup).Path("consumers/").Path(consumerACLGroup.Consumer + "/").Post("acls/").ReceiveSuccess(createdConsumerACLGroup)
 	if error != nil {
-		return fmt.Errorf("Error while creating consumer ACL group.")
+		return fmt.Errorf("error while creating consumer ACL group")
 	}
 
 	if response.StatusCode != http.StatusCreated {
@@ -63,7 +63,7 @@ func resourceKongConsumerACLGroupRead(d *schema.ResourceData, meta interface{}) 
 
 	response, error := sling.New().Path("consumers/").Path(consumerACLGroup.Consumer + "/").Path("acls/").Get(consumerACLGroup.ID).ReceiveSuccess(consumerACLGroup)
 	if error != nil {
-		return fmt.Errorf("Error while updating consumer ACL group.")
+		return fmt.Errorf("error while updating consumer ACL group")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -87,7 +87,7 @@ func resourceKongConsumerACLGroupUpdate(d *schema.ResourceData, meta interface{}
 
 	response, error := sling.New().BodyJSON(consumerACLGroup).Path("consumers/").Path(consumerACLGroup.Consumer + "/").Patch("acls/").Path(consumerACLGroup.ID).ReceiveSuccess(updatedConsumerACLGroup)
 	if error != nil {
-		return fmt.Errorf("Error while updating consumer ACL group.")
+		return fmt.Errorf("error while updating consumer ACL group")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -106,7 +106,7 @@ func resourceKongConsumerACLGroupDelete(d *schema.ResourceData, meta interface{}
 
 	response, error := sling.New().Path("consumers/").Path(consumerACLGroup.Consumer + "/").Path("acls/").Delete(consumerACLGroup.ID).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting consumer ACL group.")
+		return fmt.Errorf("error while deleting consumer ACL group")
 	}
 
 	if response.StatusCode != http.StatusNoContent {

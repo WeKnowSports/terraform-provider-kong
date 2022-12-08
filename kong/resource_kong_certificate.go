@@ -3,10 +3,10 @@ package kong
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"strings"
 )
 
 type Certificate struct {
@@ -53,7 +53,7 @@ func resourceKongCertificateCreate(d *schema.ResourceData, meta interface{}) err
 
 	response, error := sling.New().BodyJSON(certificate).Post("certificates/").ReceiveSuccess(createdCertificate)
 	if error != nil {
-		return fmt.Errorf("Error while creating certificate.")
+		return fmt.Errorf("error while creating certificate")
 	}
 
 	if response.StatusCode != http.StatusCreated {
@@ -72,7 +72,7 @@ func resourceKongCertificateRead(d *schema.ResourceData, meta interface{}) error
 
 	response, error := sling.New().Path("certificates/").Get(certificate.ID).ReceiveSuccess(certificate)
 	if error != nil {
-		return fmt.Errorf("Error while updating certificate.")
+		return fmt.Errorf("error while updating certificate")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -96,7 +96,7 @@ func resourceKongCertificateUpdate(d *schema.ResourceData, meta interface{}) err
 
 	response, error := sling.New().BodyJSON(certificate).Path("certificates/").Patch(certificate.ID).ReceiveSuccess(updatedCertificate)
 	if error != nil {
-		return fmt.Errorf("Error while updating certificate")
+		return fmt.Errorf("error while updating certificate")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -115,7 +115,7 @@ func resourceKongCertificateDelete(d *schema.ResourceData, meta interface{}) err
 
 	response, error := sling.New().Path("certificates/").Delete(certificate.ID).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting certificate.")
+		return fmt.Errorf("error while deleting certificate")
 	}
 
 	if response.StatusCode != http.StatusNoContent {

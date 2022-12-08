@@ -44,7 +44,7 @@ func resourceKongSNICreate(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().BodyJSON(sni).Post("snis/").ReceiveSuccess(createdSNI)
 	if error != nil {
-		return fmt.Errorf("Error while creating SNI.")
+		return fmt.Errorf("error while creating SNI")
 	}
 
 	if response.StatusCode != http.StatusCreated {
@@ -63,7 +63,7 @@ func resourceKongSNIRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Path("snis/").Get(sni.Name).ReceiveSuccess(sni)
 	if error != nil {
-		return fmt.Errorf("Error while updating SNI.")
+		return fmt.Errorf("error while updating SNI")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -87,7 +87,7 @@ func resourceKongSNIUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().BodyJSON(sni).Path("snis/").Patch(sni.Name).ReceiveSuccess(updatedSNI)
 	if error != nil {
-		return fmt.Errorf("Error while updating SNI")
+		return fmt.Errorf("error while updating SNI")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -106,7 +106,7 @@ func resourceKongSNIDelete(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Path("snis/").Delete(sni.Name).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting SNI.")
+		return fmt.Errorf("error while deleting SNI")
 	}
 
 	if response.StatusCode != http.StatusNoContent {

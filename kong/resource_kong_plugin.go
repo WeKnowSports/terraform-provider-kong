@@ -3,11 +3,12 @@ package kong
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dghubble/sling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/dghubble/sling"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Plugin : Kong Service/API plugin request object structure
@@ -105,7 +106,7 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if response.StatusCode == http.StatusConflict {
-		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
+		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin")
 	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
@@ -181,7 +182,7 @@ func buildModifyRequest(d *schema.ResourceData, meta interface{}) *sling.Sling {
 		config := make(map[string]interface{})
 		err := json.Unmarshal([]byte(c.(string)), &config)
 		if err != nil {
-			// ...
+			fmt.Printf("JSON is invalid")
 		}
 
 		plugin.Configuration = config

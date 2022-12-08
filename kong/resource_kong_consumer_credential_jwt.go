@@ -84,7 +84,7 @@ func resourceKongJWTCredentialCreate(d *schema.ResourceData, meta interface{}) e
 
 	response, error := sling.New().BodyJSON(jwtCredential).Path("consumers/").Path(jwtCredential.Consumer + "/").Post("jwt/").ReceiveSuccess(createdJWTCredential)
 	if error != nil {
-		return fmt.Errorf("Error while creating jwtCredential.")
+		return fmt.Errorf("error while creating jwtCredential")
 	}
 
 	if response.StatusCode != http.StatusCreated {
@@ -103,7 +103,7 @@ func resourceKongJWTCredentialRead(d *schema.ResourceData, meta interface{}) err
 
 	response, error := sling.New().Path("consumers/").Path(jwtCredential.Consumer + "/").Path("jwt/").Get(jwtCredential.ID).ReceiveSuccess(jwtCredential)
 	if error != nil {
-		return fmt.Errorf("Error while updating jwtCredential.")
+		return fmt.Errorf("error while updating jwtCredential")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -127,7 +127,7 @@ func resourceKongJWTCredentialUpdate(d *schema.ResourceData, meta interface{}) e
 
 	response, error := sling.New().BodyJSON(jwtCredential).Path("consumers/").Path(jwtCredential.Consumer + "/").Patch("jwt/").Path(jwtCredential.ID).ReceiveSuccess(updatedJWTCredential)
 	if error != nil {
-		return fmt.Errorf("Error while updating jwtCredential.")
+		return fmt.Errorf("error while updating jwtCredential")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -146,7 +146,7 @@ func resourceKongJWTCredentialDelete(d *schema.ResourceData, meta interface{}) e
 
 	response, error := sling.New().Path("consumers/").Path(jwtCredential.Consumer + "/").Path("jwt/").Delete(jwtCredential.ID).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting jwtCredential.")
+		return fmt.Errorf("error while deleting jwtCredential")
 	}
 
 	if response.StatusCode != http.StatusNoContent {
