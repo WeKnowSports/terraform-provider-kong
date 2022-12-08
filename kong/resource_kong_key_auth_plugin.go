@@ -25,7 +25,7 @@ func resourceKongKeyAuthPlugin() *schema.Resource {
 		Delete: resourceKeyAuthPluginDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

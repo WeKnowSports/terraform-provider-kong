@@ -362,7 +362,7 @@ func resourceKongUpstreamCreate(d *schema.ResourceData, meta interface{}) error 
 
 	response, Error := Sling.New().BodyJSON(upstream).Post("upstreams/").ReceiveSuccess(createdUpstream)
 	if Error != nil {
-		return fmt.Errorf("Error while creating upstream.")
+		return fmt.Errorf("error while creating upstream")
 	}
 
 	if response.StatusCode != http.StatusCreated {

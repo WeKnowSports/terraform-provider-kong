@@ -22,7 +22,7 @@ func resourceKongConsumer() *schema.Resource {
 		Delete: resourceKongConsumerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

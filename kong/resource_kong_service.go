@@ -2,10 +2,11 @@ package kong
 
 import (
 	"fmt"
-	"github.com/dghubble/sling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"net/http"
 	"strconv"
+
+	"github.com/dghubble/sling"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Service : Kong Service request object structure
@@ -31,7 +32,7 @@ func resourceKongService() *schema.Resource {
 		Delete: resourceKongServiceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
