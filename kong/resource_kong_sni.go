@@ -9,8 +9,8 @@ import (
 )
 
 type SNI struct {
-	Name             string `json:"name,omitempty"`
-	SSLCertificateID string `json:"ssl_certificate_id,omitempty"`
+	Name             string      `json:"name,omitempty"`
+	SSLCertificateID Certificate `json:"certificate,omitempty"`
 }
 
 func resourceKongSNI() *schema.Resource {
@@ -26,7 +26,7 @@ func resourceKongSNI() *schema.Resource {
 				Required:    true,
 				Description: "The SNI name to associate with the given sni.",
 			},
-			"ssl_certificate_id": {
+			"certificate": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The id (a UUID) of the certificate with which to associate the SNI hostname.",
@@ -118,8 +118,10 @@ func resourceKongSNIDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getSNIFromResourceData(d *schema.ResourceData) *SNI {
 	sni := &SNI{
-		Name:             d.Get("name").(string),
-		SSLCertificateID: d.Get("ssl_certificate_id").(string),
+		Name: d.Get("name").(string),
+		SSLCertificateID: Certificate{
+			ID: d.Get("certificate").(string),
+		},
 	}
 
 	return sni
@@ -128,5 +130,5 @@ func getSNIFromResourceData(d *schema.ResourceData) *SNI {
 func setSNIToResourceData(d *schema.ResourceData, sni *SNI) {
 	d.SetId(sni.Name)
 	d.Set("name", sni.Name)
-	d.Set("ssl_certificate_id", sni.SSLCertificateID)
+	d.Set("certificate", sni.SSLCertificateID)
 }
