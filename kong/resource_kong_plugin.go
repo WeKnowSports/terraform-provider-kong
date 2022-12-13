@@ -47,19 +47,10 @@ func resourceKongPlugin() *schema.Resource {
 				Description: "The name of the plugin to use.",
 			},
 
-			"config": {
-				Type:          schema.TypeMap,
-				Optional:      true,
-				Elem:          schema.TypeString,
-				Default:       nil,
-				ConflictsWith: []string{"config_json"},
-			},
-
 			"config_json": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Default:       nil,
-				ConflictsWith: []string{"config"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  nil,
 			},
 
 			"service": {
@@ -179,13 +170,6 @@ func buildModifyRequest(d *schema.ResourceData, meta interface{}) *sling.Sling {
 	} else {
 		form := url.Values{
 			"name": {plugin.Name},
-		}
-
-		if c, ok := d.GetOk("config"); ok {
-			conf := c.(map[string]interface{})
-			for k, v := range conf {
-				form.Add("config."+k, v.(string))
-			}
 		}
 
 		body := strings.NewReader(form.Encode())
