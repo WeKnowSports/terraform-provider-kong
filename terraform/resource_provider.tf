@@ -1,5 +1,5 @@
 provider "kong" {
-  address = "http://localhost:8000"
+  address = "http://localhost:9001"
   username = "username"
   password = "password"
 }
