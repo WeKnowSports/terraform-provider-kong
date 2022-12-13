@@ -30,6 +30,7 @@ func resourceKongKeyAuthCredential() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Default:     nil,
+				Sensitive:   true,
 				Description: "The key to use in the Key Authentication.",
 			},
 
