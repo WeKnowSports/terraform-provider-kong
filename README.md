@@ -32,4 +32,3 @@ Please refer to terraform/tests
 
 ## Status of Last Deployment:<br>
 <img src="https://github.com/freddy-dov/terraform-provider-kong/workflows/Go/badge.svg?branch=master"><br>
-
