@@ -2,16 +2,28 @@ resource "kong_route" "route" {
 
   service = kong_service.service.id
 
-  #name          = local.route_name
-  protocols     = ["http", "https"]
-  methods       = []
-  paths         = ["/my-path"]
-  strip_path    = true
-  hosts         = ["localhost"]
-  preserve_host = false
+  name      = "my-route"
+  protocols = ["http", "https"]
+  methods   = ["GET", "POST"]
+  hosts     = ["example.com", "foo.test"]
+  paths     = ["/foo", "/bar"]
 
-  header {
-    name   = "X-Custom"
-    values = ["hello", "hi"]
-  }
+  # header {
+  #    name   = "x-my-header"
+  #    values = ["foo", "bar"]
+  #  }
+  #  header {
+  #    name   = "x-another-header"
+  #    values = ["bla"]
+  #  }
+
+  https_redirect_status_code = 426
+  regex_priority             = 1
+  strip_path                 = true
+  path_handling              = "v0"
+  preserve_host              = false
+  request_buffering          = false
+  response_buffering         = false
+  tags                       = ["user-level", "low-priority"]
+
 }
