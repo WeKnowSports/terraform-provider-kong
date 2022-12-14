@@ -5,17 +5,19 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type JWTCredential struct {
-	ID           string `json:"id,omitempty"`
-	Key          string `json:"key,omitempty"`
-	Algorithm    string `json:"algorithm,omitempty"`
-	RSAPublicKey string `json:"rsa_public_key,omitempty"`
-	Secret       string `json:"secret,omitempty"`
-	Consumer     string `json:"-"`
+	ID           string   `json:"id,omitempty"`
+	Key          string   `json:"key,omitempty"`
+	Algorithm    string   `json:"algorithm,omitempty"`
+	RSAPublicKey string   `json:"rsa_public_key,omitempty"`
+	Secret       string   `json:"secret,omitempty"`
+	Consumer     string   `json:"-"`
+	Tags         []string `json:"tags"`
 }
 
 func resourceKongJWTCredential() *schema.Resource {
@@ -70,6 +72,13 @@ func resourceKongJWTCredential() *schema.Resource {
 			"consumer": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
 			},
 		},
 	}
@@ -164,6 +173,7 @@ func getJWTCredentialFromResourceData(d *schema.ResourceData) *JWTCredential {
 		RSAPublicKey: d.Get("rsa_public_key").(string),
 		Secret:       d.Get("secret").(string),
 		Consumer:     d.Get("consumer").(string),
+		Tags:         helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
 	}
 
 	return jwtCredential
@@ -176,4 +186,5 @@ func setJWTCredentialToResourceData(d *schema.ResourceData, jwtCredential *JWTCr
 	d.Set("rsa_public_key", jwtCredential.RSAPublicKey)
 	d.Set("secret", jwtCredential.Secret)
 	d.Set("consumer", jwtCredential.Consumer)
+	d.Set("tags", jwtCredential.Tags)
 }

@@ -34,6 +34,7 @@ func Provider() *schema.Provider {
 			"kong_consumer_jwt_credential":        resourceKongJWTCredential(),
 			"kong_consumer_acl_group":             resourceKongConsumerACLGroup(),
 			"kong_certificate":                    resourceKongCertificate(),
+			"kong_ca_certificate":                 resourceKongCACertificate(),
 			"kong_sni":                            resourceKongSNI(),
 			"kong_upstream":                       resourceKongUpstream(),
 			"kong_target":                         resourceKongTarget(),

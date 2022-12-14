@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ConsumerACLGroup struct {
-	ID       string `json:"id,omitempty"`
-	Group    string `json:"group,omitempty"`
-	Consumer string `json:"-"`
+	ID       string   `json:"id,omitempty"`
+	Group    string   `json:"group,omitempty"`
+	Consumer string   `json:"-"`
+	Tags     []string `json:"tags"`
 }
 
 func resourceKongConsumerACLGroup() *schema.Resource {
@@ -27,9 +29,17 @@ func resourceKongConsumerACLGroup() *schema.Resource {
 				Required:    true,
 				Description: "The arbitrary group name to associate to the consumer.",
 			},
+
 			"consumer": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
 			},
 		},
 	}
@@ -121,6 +131,7 @@ func getConsumerACLGroupFromResourceData(d *schema.ResourceData) *ConsumerACLGro
 		ID:       d.Id(),
 		Group:    d.Get("group").(string),
 		Consumer: d.Get("consumer").(string),
+		Tags:     helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
 	}
 
 	return consumerACLGroup
@@ -130,4 +141,5 @@ func setConsumerACLGroupToResourceData(d *schema.ResourceData, consumerACLGroup 
 	d.SetId(consumerACLGroup.ID)
 	d.Set("group", consumerACLGroup.Group)
 	d.Set("consumer", consumerACLGroup.Consumer)
+	d.Set("tags", consumerACLGroup.Tags)
 }

@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type KeyAuthCredential struct {
-	ID       string `json:"id,omitempty"`
-	Key      string `json:"key,omitempty"`
-	Consumer string `json:"-"`
+	ID       string   `json:"id,omitempty"`
+	Key      string   `json:"key,omitempty"`
+	Consumer string   `json:"-"`
+	TTL      int      `json:"ttl,omitempty"`
+	Tags     []string `json:"tags"`
 }
 
 func resourceKongKeyAuthCredential() *schema.Resource {
@@ -37,6 +40,19 @@ func resourceKongKeyAuthCredential() *schema.Resource {
 			"consumer": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
+			},
+
+			"ttl": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The number of seconds the key is going to be valid",
 			},
 		},
 	}
@@ -128,6 +144,8 @@ func getKeyAuthCredentialFromResourceData(d *schema.ResourceData) *KeyAuthCreden
 		ID:       d.Id(),
 		Key:      d.Get("key").(string),
 		Consumer: d.Get("consumer").(string),
+		Tags:     helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
+		TTL:      d.Get("ttl").(int),
 	}
 
 	return keyAuthCredential
@@ -137,4 +155,6 @@ func setKeyAuthCredentialToResourceData(d *schema.ResourceData, keyAuthCredentia
 	d.SetId(keyAuthCredential.ID)
 	d.Set("key", keyAuthCredential.Key)
 	d.Set("consumer", keyAuthCredential.Consumer)
+	d.Set("tags", keyAuthCredential.Tags)
+	d.Set("ttls", keyAuthCredential.TTL)
 }

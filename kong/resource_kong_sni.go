@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -11,6 +12,7 @@ import (
 type SNI struct {
 	Name             string      `json:"name,omitempty"`
 	SSLCertificateID Certificate `json:"certificate,omitempty"`
+	Tags             []string    `json:"tags"`
 }
 
 func resourceKongSNI() *schema.Resource {
@@ -30,6 +32,13 @@ func resourceKongSNI() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The id (a UUID) of the certificate with which to associate the SNI hostname.",
+			},
+
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
 			},
 		},
 	}
@@ -122,6 +131,7 @@ func getSNIFromResourceData(d *schema.ResourceData) *SNI {
 		SSLCertificateID: Certificate{
 			ID: d.Get("certificate").(string),
 		},
+		Tags: helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
 	}
 
 	return sni
@@ -131,4 +141,5 @@ func setSNIToResourceData(d *schema.ResourceData, sni *SNI) {
 	d.SetId(sni.Name)
 	d.Set("name", sni.Name)
 	d.Set("certificate", sni.SSLCertificateID)
+	d.Set("tags", sni.Tags)
 }

@@ -5,14 +5,17 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type Target struct {
-	ID       string `json:"id,omitempty"`
-	Upstream string `json:"-"`
-	Target   string `json:"target,omitempty"`
+	ID       string   `json:"id,omitempty"`
+	Upstream string   `json:"-"`
+	Target   string   `json:"target,omitempty"`
+	Weight   int      `json:"weight,omitempty"`
+	Tags     []string `json:"tags"`
 }
 
 func resourceKongTarget() *schema.Resource {
@@ -28,6 +31,7 @@ func resourceKongTarget() *schema.Resource {
 				Description: "The unique identifier or the name of the upstream to which to add the target.",
 				ForceNew:    true,
 			},
+
 			"target": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -36,6 +40,20 @@ func resourceKongTarget() *schema.Resource {
 					return strings.TrimSuffix(new, ":8000") == strings.TrimSuffix(old, ":8000")
 				},
 				ForceNew: true,
+			},
+
+			"weight": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+			},
+
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				ForceNew:    true,
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
 			},
 		},
 	}
@@ -89,6 +107,8 @@ func getTargetFromResourceData(d *schema.ResourceData) *Target {
 		ID:       d.Id(),
 		Target:   d.Get("target").(string),
 		Upstream: d.Get("upstream").(string),
+		Weight:   d.Get("weight").(int),
+		Tags:     helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
 	}
 
 	return target
@@ -98,4 +118,6 @@ func setTargetToResourceData(d *schema.ResourceData, target *Target) {
 	d.SetId(target.ID)
 	d.Set("target", target.Target)
 	d.Set("upstream", target.Upstream)
+	d.Set("weight", target.Weight)
+	d.Set("tags", target.Tags)
 }

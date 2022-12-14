@@ -4,21 +4,32 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Route : Kong Route request object structure
 type Route struct {
-	ID           string              `json:"id,omitempty"`
-	Protocols    []string            `json:"protocols,omitempty"`
-	Methods      []string            `json:"methods"`
-	Hosts        []string            `json:"hosts"`
-	Paths        []string            `json:"paths"`
-	StripPath    bool                `json:"strip_path,omitempty"`
-	PreserveHost bool                `json:"preserve_host,omitempty"`
-	Headers      map[string][]string `json:"headers,omitempty"`
-	Service      Service             `json:"service,omitempty"`
+	ID                      string              `json:"id,omitempty"`
+	Name                    string              `json:"name,omitempty"`
+	Protocols               []string            `json:"protocols"`
+	Methods                 []string            `json:"methods"`
+	Hosts                   []string            `json:"hosts"`
+	Paths                   []string            `json:"paths"`
+	Headers                 map[string][]string `json:"headers"`
+	HttpsRedirectStatusCode int                 `json:"https_redirect_status_code,omitempty"`
+	RegexPriority           int                 `json:"regex_priority"`
+	StripPath               bool                `json:"strip_path,omitempty"`
+	PathHandling            string              `json:"path_handling,omitempty"`
+	PreserveHost            bool                `json:"preserve_host,omitempty"`
+	RequestBuffering        bool                `json:"request_buffering"`
+	ResponseBuffering       bool                `json:"response_buffering"`
+	SNIs                    []string            `json:"snis,omitempty"`
+	// Sources                 []string            `json:"sources,omitempty"`
+	// Destinations            []string            `json:"destinations,omitempty"`
+	Tags    []string `json:"tags"`
+	Service Service  `json:"service,omitempty"`
 }
 
 func resourceKongRoute() *schema.Resource {
@@ -33,19 +44,18 @@ func resourceKongRoute() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"protocols": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Default:  nil,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocols := convertInterfaceArrToStrings(d.Get("protocols").([]interface{}))
 
-					// TODO: Yeah...
-					return len(protocols) == 2 &&
-						((protocols[0] == "http" && protocols[1] == "https") ||
-							(protocols[0] == "https" && protocols[1] == "http"))
-				},
+			"name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
+				Description: "The name of the Route.",
+			},
+
+			"protocols": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Required:    true,
 				Description: "A list of the protocols this Route should allow. By default it is [\"http\", \"https\"], which means that the Route accepts both. When set to [\"https\"], HTTP requests are answered with a request to upgrade to HTTPS.",
 			},
 
@@ -53,7 +63,6 @@ func resourceKongRoute() *schema.Resource {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
-				Default:     nil,
 				Description: "A list of HTTP methods that match this Route. For example: [\"GET\", \"POST\"]. At least one of hosts, paths, or methods must be set.",
 			},
 
@@ -61,7 +70,6 @@ func resourceKongRoute() *schema.Resource {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
-				Default:     nil,
 				Description: "A list of domain names that match this Route. For example: example.com. At least one of hosts, paths, or methods must be set.",
 			},
 
@@ -73,25 +81,6 @@ func resourceKongRoute() *schema.Resource {
 				Description: "A list of paths that match this Route. For example: /my-path. At least one of hosts, paths, or methods must be set.",
 			},
 
-			"strip_path": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "When matching a Route via one of the paths, strip the matching prefix from the upstream request URL. Defaults to true.",
-			},
-
-			"preserve_host": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "When matching a Route via one of the hosts domain names, use the request Host header in the upstream request headers. By default set to false, and the upstream Host header will be that of the Service's host.",
-			},
-
-			"service": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The Service this Route is associated to. This is where the Route proxies traffic to.",
-			},
 			"header": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -112,6 +101,111 @@ func resourceKongRoute() *schema.Resource {
 					},
 				},
 				Description: "One or more lists of values indexed by header name that will cause this Route to match if present in the request.",
+			},
+
+			"https_redirect_status_code": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     426,
+				Description: "The status code Kong responds with when all properties of a Route match except the protocol i.e. if the protocol of the request is HTTP instead of HTTPS",
+			},
+
+			"regex_priority": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     0,
+				Description: "A number used to choose which route resolves a given request when several routes match it using regexes simultaneously.",
+			},
+			"strip_path": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "When matching a Route via one of the paths, strip the matching prefix from the upstream request URL. Defaults to true.",
+			},
+
+			"path_handling": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "v0",
+				Description: "Controls how the Service path, Route path and requested path are combined when sending a request to the upstream",
+			},
+
+			"preserve_host": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "When matching a Route via one of the hosts domain names, use the request Host header in the upstream request headers. By default set to false, and the upstream Host header will be that of the Service's host.",
+			},
+
+			"request_buffering": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Whether to enable request body buffering or not",
+			},
+
+			"response_buffering": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Whether to enable response body buffering or not",
+			},
+
+			"snis": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Default:     nil,
+				Description: "A list of SNIs that match this Route when using stream routing.",
+			},
+
+			// "sources": {
+			// 	Type: schema.TypeSet,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"ip": {
+			// 				Type:     schema.TypeString,
+			// 				Optional: true,
+			// 			},
+			// 			"port": {
+			// 				Type:     schema.TypeInt,
+			// 				Optional: true,
+			// 			},
+			// 		},
+			// 	},
+			// 	Optional:    true,
+			// 	Description: "A list of IP sources of incoming connections that match this Route when using stream routing",
+			// },
+
+			// "destinations": {
+			// 	Type: schema.TypeSet,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"ip": {
+			// 				Type:     schema.TypeString,
+			// 				Optional: true,
+			// 			},
+			// 			"port": {
+			// 				Type:     schema.TypeInt,
+			// 				Optional: true,
+			// 			},
+			// 		},
+			// 	},
+			// 	Optional:    true,
+			// 	Description: "A list of IP destinations of incoming connections that match this Route when using stream routing",
+			// },
+
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
+			},
+
+			"service": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The Service this Route is associated to. This is where the Route proxies traffic to.",
 			},
 		},
 	}
@@ -205,14 +299,24 @@ func resourceKongRouteDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getRouteFromResourceData(d *schema.ResourceData) *Route {
 	route := &Route{
-		ID:           d.Id(),
-		Protocols:    convertInterfaceArrToStrings(d.Get("protocols").([]interface{})),
-		Methods:      convertInterfaceArrToStrings(d.Get("methods").([]interface{})),
-		Hosts:        convertInterfaceArrToStrings(d.Get("hosts").([]interface{})),
-		Paths:        convertInterfaceArrToStrings(d.Get("paths").([]interface{})),
-		StripPath:    d.Get("strip_path").(bool),
-		PreserveHost: d.Get("preserve_host").(bool),
-		Headers:      readMapStringArrayFromResource(d, "header"),
+		ID:                      d.Id(),
+		Name:                    d.Get("name").(string),
+		Protocols:               helper.ConvertInterfaceArrToStrings(d.Get("protocols").([]interface{})),
+		Methods:                 helper.ConvertInterfaceArrToStrings(d.Get("methods").([]interface{})),
+		Hosts:                   helper.ConvertInterfaceArrToStrings(d.Get("hosts").([]interface{})),
+		Paths:                   helper.ConvertInterfaceArrToStrings(d.Get("paths").([]interface{})),
+		Headers:                 readMapStringArrayFromResource(d, "header"),
+		HttpsRedirectStatusCode: d.Get("https_redirect_status_code").(int),
+		RegexPriority:           d.Get("regex_priority").(int),
+		StripPath:               d.Get("strip_path").(bool),
+		PathHandling:            d.Get("path_handling").(string),
+		PreserveHost:            d.Get("preserve_host").(bool),
+		RequestBuffering:        d.Get("request_buffering").(bool),
+		ResponseBuffering:       d.Get("response_buffering").(bool),
+		SNIs:                    helper.ConvertInterfaceArrToStrings(d.Get("snis").([]interface{})),
+		// Sources:                 helper.ConvertInterfaceArrToStrings(d.Get("sources").([]interface{})),
+		// Destinations:            helper.ConvertInterfaceArrToStrings(d.Get("destinations").([]interface{})),
+		Tags: helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
 		Service: Service{
 			ID: d.Get("service").(string),
 		},
@@ -223,21 +327,24 @@ func getRouteFromResourceData(d *schema.ResourceData) *Route {
 
 func setRouteToResourceData(d *schema.ResourceData, route *Route) {
 	d.SetId(route.ID)
+	d.Set("name", route.Name)
 	d.Set("protocols", route.Protocols)
 	d.Set("methods", route.Methods)
 	d.Set("hosts", route.Hosts)
 	d.Set("paths", route.Paths)
+	d.Set("headers", route.Headers)
+	d.Set("https_redirect_status_code", route.HttpsRedirectStatusCode)
+	d.Set("regex_priority", route.RegexPriority)
 	d.Set("strip_path", route.StripPath)
+	d.Set("path_handling", route.PathHandling)
 	d.Set("preserve_host", route.PreserveHost)
+	d.Set("request_buffering", route.RequestBuffering)
+	d.Set("response_buffering", route.ResponseBuffering)
+	d.Set("snis", route.SNIs)
+	// d.Set("sources", route.Sources)
+	// d.Set("destinations", route.Destinations)
+	d.Set("tags", route.Tags)
 	d.Set("service", route.Service.ID)
-}
-
-func convertInterfaceArrToStrings(strs []interface{}) []string {
-	arr := make([]string, len(strs))
-	for i, str := range strs {
-		arr[i] = str.(string)
-	}
-	return arr
 }
 
 func readMapStringArrayFromResource(d *schema.ResourceData, key string) map[string][]string {
