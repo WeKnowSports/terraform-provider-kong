@@ -1,33 +1,15 @@
 # Terraform provider for KONG
 
-Uses [Terraform](http://www.terraform.io) to configure APIs in [Kong](http://www.getkong.org). It fully supports creating APIs and consumers, but plugins and credentials are not complete (most plugins will work though).
+Uses [Terraform](http://www.terraform.io) to configure APIs in [Kong](http://www.getkong.org).
 
+## Compile and terraform plan / apply
 ```
 go build -o tests/terraform-provider-kong
 ```
-
-## Compile and terraform plan / apply
-
-### Start kong
-
-
-```Shell
-docker-compose up -d
-```
-
-## Run plan
-```Shell
-./start plan
-```
-
-## Run apply
-```Shell
-./start apply
-```
+Don't forget to copy binary to [terraform local dir](https://developer.hashicorp.com/terraform/language/providers/requirements#in-house-providers)
 
 ## Example usage
-
-Please refer to terraform/tests 
+Please refer to [terraform](./terraform) folder
 
 
 ## Status of Last Deployment:<br>
