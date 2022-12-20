@@ -5,17 +5,19 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type JWTCredential struct {
-	ID           string `json:"id,omitempty"`
-	Key          string `json:"key,omitempty"`
-	Algorithm    string `json:"algorithm,omitempty"`
-	RSAPublicKey string `json:"rsa_public_key,omitempty"`
-	Secret       string `json:"secret,omitempty"`
-	Consumer     string `json:"-"`
+	ID           string   `json:"id,omitempty"`
+	Key          string   `json:"key,omitempty"`
+	Algorithm    string   `json:"algorithm,omitempty"`
+	RSAPublicKey string   `json:"rsa_public_key,omitempty"`
+	Secret       string   `json:"secret,omitempty"`
+	Consumer     string   `json:"-"`
+	Tags         []string `json:"tags"`
 }
 
 func resourceKongJWTCredential() *schema.Resource {
@@ -71,6 +73,13 @@ func resourceKongJWTCredential() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
+			},
 		},
 	}
 }
@@ -84,7 +93,7 @@ func resourceKongJWTCredentialCreate(d *schema.ResourceData, meta interface{}) e
 
 	response, error := sling.New().BodyJSON(jwtCredential).Path("consumers/").Path(jwtCredential.Consumer + "/").Post("jwt/").ReceiveSuccess(createdJWTCredential)
 	if error != nil {
-		return fmt.Errorf("Error while creating jwtCredential.")
+		return fmt.Errorf("error while creating jwtCredential")
 	}
 
 	if response.StatusCode != http.StatusCreated {
@@ -103,7 +112,7 @@ func resourceKongJWTCredentialRead(d *schema.ResourceData, meta interface{}) err
 
 	response, error := sling.New().Path("consumers/").Path(jwtCredential.Consumer + "/").Path("jwt/").Get(jwtCredential.ID).ReceiveSuccess(jwtCredential)
 	if error != nil {
-		return fmt.Errorf("Error while updating jwtCredential.")
+		return fmt.Errorf("error while updating jwtCredential")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -127,7 +136,7 @@ func resourceKongJWTCredentialUpdate(d *schema.ResourceData, meta interface{}) e
 
 	response, error := sling.New().BodyJSON(jwtCredential).Path("consumers/").Path(jwtCredential.Consumer + "/").Patch("jwt/").Path(jwtCredential.ID).ReceiveSuccess(updatedJWTCredential)
 	if error != nil {
-		return fmt.Errorf("Error while updating jwtCredential.")
+		return fmt.Errorf("error while updating jwtCredential")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -146,7 +155,7 @@ func resourceKongJWTCredentialDelete(d *schema.ResourceData, meta interface{}) e
 
 	response, error := sling.New().Path("consumers/").Path(jwtCredential.Consumer + "/").Path("jwt/").Delete(jwtCredential.ID).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting jwtCredential.")
+		return fmt.Errorf("error while deleting jwtCredential")
 	}
 
 	if response.StatusCode != http.StatusNoContent {
@@ -164,6 +173,7 @@ func getJWTCredentialFromResourceData(d *schema.ResourceData) *JWTCredential {
 		RSAPublicKey: d.Get("rsa_public_key").(string),
 		Secret:       d.Get("secret").(string),
 		Consumer:     d.Get("consumer").(string),
+		Tags:         helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
 	}
 
 	return jwtCredential
@@ -176,4 +186,5 @@ func setJWTCredentialToResourceData(d *schema.ResourceData, jwtCredential *JWTCr
 	d.Set("rsa_public_key", jwtCredential.RSAPublicKey)
 	d.Set("secret", jwtCredential.Secret)
 	d.Set("consumer", jwtCredential.Consumer)
+	d.Set("tags", jwtCredential.Tags)
 }

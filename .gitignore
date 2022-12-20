@@ -23,9 +23,15 @@ _testmain.go
 *.test
 *.prof
 
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
 *.tfstate
-*.tfstate.backup
-.terraform/*
+*.tfstate.*
+
+# Dependency Lock File
+*.terraform.lock.hcl
 
 *.log
 
@@ -34,3 +40,6 @@ terraform-provider-kong
 
 .idea
 dist/
+
+# Mac
+**/.DS_Store

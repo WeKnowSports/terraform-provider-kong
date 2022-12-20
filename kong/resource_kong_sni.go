@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type SNI struct {
-	Name             string `json:"name,omitempty"`
-	SSLCertificateID string `json:"ssl_certificate_id,omitempty"`
+	Name             string      `json:"name,omitempty"`
+	SSLCertificateID Certificate `json:"certificate,omitempty"`
+	Tags             []string    `json:"tags"`
 }
 
 func resourceKongSNI() *schema.Resource {
@@ -26,10 +28,17 @@ func resourceKongSNI() *schema.Resource {
 				Required:    true,
 				Description: "The SNI name to associate with the given sni.",
 			},
-			"ssl_certificate_id": {
+			"certificate": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The id (a UUID) of the certificate with which to associate the SNI hostname.",
+			},
+
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
 			},
 		},
 	}
@@ -44,7 +53,7 @@ func resourceKongSNICreate(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().BodyJSON(sni).Post("snis/").ReceiveSuccess(createdSNI)
 	if error != nil {
-		return fmt.Errorf("Error while creating SNI.")
+		return fmt.Errorf("error while creating SNI")
 	}
 
 	if response.StatusCode != http.StatusCreated {
@@ -63,7 +72,7 @@ func resourceKongSNIRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Path("snis/").Get(sni.Name).ReceiveSuccess(sni)
 	if error != nil {
-		return fmt.Errorf("Error while updating SNI.")
+		return fmt.Errorf("error while updating SNI")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -87,7 +96,7 @@ func resourceKongSNIUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().BodyJSON(sni).Path("snis/").Patch(sni.Name).ReceiveSuccess(updatedSNI)
 	if error != nil {
-		return fmt.Errorf("Error while updating SNI")
+		return fmt.Errorf("error while updating SNI")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -106,7 +115,7 @@ func resourceKongSNIDelete(d *schema.ResourceData, meta interface{}) error {
 
 	response, error := sling.New().Path("snis/").Delete(sni.Name).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting SNI.")
+		return fmt.Errorf("error while deleting SNI")
 	}
 
 	if response.StatusCode != http.StatusNoContent {
@@ -118,8 +127,11 @@ func resourceKongSNIDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getSNIFromResourceData(d *schema.ResourceData) *SNI {
 	sni := &SNI{
-		Name:             d.Get("name").(string),
-		SSLCertificateID: d.Get("ssl_certificate_id").(string),
+		Name: d.Get("name").(string),
+		SSLCertificateID: Certificate{
+			ID: d.Get("certificate").(string),
+		},
+		Tags: helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
 	}
 
 	return sni
@@ -128,5 +140,6 @@ func getSNIFromResourceData(d *schema.ResourceData) *SNI {
 func setSNIToResourceData(d *schema.ResourceData, sni *SNI) {
 	d.SetId(sni.Name)
 	d.Set("name", sni.Name)
-	d.Set("ssl_certificate_id", sni.SSLCertificateID)
+	d.Set("certificate", sni.SSLCertificateID)
+	d.Set("tags", sni.Tags)
 }

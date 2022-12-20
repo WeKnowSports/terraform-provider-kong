@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ConsumerACLGroup struct {
-	ID       string `json:"id,omitempty"`
-	Group    string `json:"group,omitempty"`
-	Consumer string `json:"-"`
+	ID       string   `json:"id,omitempty"`
+	Group    string   `json:"group,omitempty"`
+	Consumer string   `json:"-"`
+	Tags     []string `json:"tags"`
 }
 
 func resourceKongConsumerACLGroup() *schema.Resource {
@@ -27,9 +29,17 @@ func resourceKongConsumerACLGroup() *schema.Resource {
 				Required:    true,
 				Description: "The arbitrary group name to associate to the consumer.",
 			},
+
 			"consumer": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
 			},
 		},
 	}
@@ -44,7 +54,7 @@ func resourceKongConsumerACLGroupCreate(d *schema.ResourceData, meta interface{}
 
 	response, error := sling.New().BodyJSON(consumerACLGroup).Path("consumers/").Path(consumerACLGroup.Consumer + "/").Post("acls/").ReceiveSuccess(createdConsumerACLGroup)
 	if error != nil {
-		return fmt.Errorf("Error while creating consumer ACL group.")
+		return fmt.Errorf("error while creating consumer ACL group")
 	}
 
 	if response.StatusCode != http.StatusCreated {
@@ -63,7 +73,7 @@ func resourceKongConsumerACLGroupRead(d *schema.ResourceData, meta interface{}) 
 
 	response, error := sling.New().Path("consumers/").Path(consumerACLGroup.Consumer + "/").Path("acls/").Get(consumerACLGroup.ID).ReceiveSuccess(consumerACLGroup)
 	if error != nil {
-		return fmt.Errorf("Error while updating consumer ACL group.")
+		return fmt.Errorf("error while updating consumer ACL group")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -87,7 +97,7 @@ func resourceKongConsumerACLGroupUpdate(d *schema.ResourceData, meta interface{}
 
 	response, error := sling.New().BodyJSON(consumerACLGroup).Path("consumers/").Path(consumerACLGroup.Consumer + "/").Patch("acls/").Path(consumerACLGroup.ID).ReceiveSuccess(updatedConsumerACLGroup)
 	if error != nil {
-		return fmt.Errorf("Error while updating consumer ACL group.")
+		return fmt.Errorf("error while updating consumer ACL group")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -106,7 +116,7 @@ func resourceKongConsumerACLGroupDelete(d *schema.ResourceData, meta interface{}
 
 	response, error := sling.New().Path("consumers/").Path(consumerACLGroup.Consumer + "/").Path("acls/").Delete(consumerACLGroup.ID).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting consumer ACL group.")
+		return fmt.Errorf("error while deleting consumer ACL group")
 	}
 
 	if response.StatusCode != http.StatusNoContent {
@@ -121,6 +131,7 @@ func getConsumerACLGroupFromResourceData(d *schema.ResourceData) *ConsumerACLGro
 		ID:       d.Id(),
 		Group:    d.Get("group").(string),
 		Consumer: d.Get("consumer").(string),
+		Tags:     helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
 	}
 
 	return consumerACLGroup
@@ -130,4 +141,5 @@ func setConsumerACLGroupToResourceData(d *schema.ResourceData, consumerACLGroup 
 	d.SetId(consumerACLGroup.ID)
 	d.Set("group", consumerACLGroup.Group)
 	d.Set("consumer", consumerACLGroup.Consumer)
+	d.Set("tags", consumerACLGroup.Tags)
 }
