@@ -38,6 +38,7 @@ func resourceKongConsumer() *schema.Resource {
 			"custom_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Default:     nil,
 				Description: "Field for storing an existing ID for the consumer, useful for mapping Kong with users in your existing database. You must send either this field or username with the request.",
 			},

@@ -80,8 +80,8 @@ type Upstream struct {
 	HealthChecks            *UpstreamHealthChecks `json:"healthchecks,omitempty"`
 	Tags                    []string              `json:"tags"`
 	HostHeader              string                `json:"host_header,omitempty"`
-	ClientCertificate       Certificate           `json:"client_certificate,omitempty"`
-	UseSrvName              bool                  `json:"use_srv_name,omitempty"`
+	ClientCertificate       Certificate           `json:"-"`
+	UseSrvName              bool                  `json:"use_srv_name"`
 }
 
 func resourceKongUpstream() *schema.Resource {
@@ -184,8 +184,7 @@ func resourceKongUpstream() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										// Kong 1.0.0+
-										// Default:  "http",
+										Default:  "http",
 									},
 									"timeout": {
 										Type:     schema.TypeInt,
@@ -206,14 +205,11 @@ func resourceKongUpstream() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
-										// Kong 1.0.0+
-										// Default:  true,
 									},
 									"https_sni": {
 										Type:     schema.TypeString,
 										Optional: true,
-										// Kong 1.0.0+
-										// Default:  nil,
+										Default:  nil,
 									},
 									"healthy": {
 										Type:     schema.TypeList,
@@ -294,8 +290,7 @@ func resourceKongUpstream() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										// Kong 1.0.0+
-										// Default:  "http",
+										Default:  "http",
 									},
 									"healthy": {
 										Type:     schema.TypeList,
@@ -370,6 +365,7 @@ func resourceKongUpstream() *schema.Resource {
 			"host_header": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 		},
 	}

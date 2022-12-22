@@ -12,6 +12,7 @@ resource "kong_upstream" "upstream" {
   host_header          = "x-host"
   tags                 = ["a", "b"]
   client_certificate   = kong_certificate.certificate.id
+  use_srv_name         = false
 
   healthchecks {
     active {

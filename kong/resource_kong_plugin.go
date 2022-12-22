@@ -17,7 +17,7 @@ type Plugin struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
-	Protocols     []string               `json:"protocols"`
+	Protocols     []string               `json:"protocols,omitempty"`
 	Service       string                 `json:"-"`
 	Route         string                 `json:"-"`
 	Consumer      string                 `json:"-"`
