@@ -13,7 +13,3 @@ Don't forget to copy binary to [terraform local dir](https://developer.hashicorp
 ## Example usage
 
 Please refer to [terraform](./terraform) folder
-
-## Status of Last Deployment:<br>
-
-<img src="https://github.com/freddy-dov/terraform-provider-kong/workflows/Go/badge.svg?branch=master"><br>
