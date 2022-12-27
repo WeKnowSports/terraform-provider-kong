@@ -5,17 +5,20 @@ import (
 	"net/http"
 
 	"crypto/sha1"
-	"github.com/dghubble/sling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"io"
 	"strings"
+
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
+	"github.com/dghubble/sling"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type BasicAuthCredential struct {
-	ID       string `json:"id,omitempty"`
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-	Consumer string `json:"-"`
+	ID       string   `json:"id,omitempty"`
+	Username string   `json:"username,omitempty"`
+	Password string   `json:"password,omitempty"`
+	Consumer string   `json:"-"`
+	Tags     []string `json:"tags"`
 }
 
 func resourceKongBasicAuthCredential() *schema.Resource {
@@ -54,6 +57,13 @@ func resourceKongBasicAuthCredential() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
+			},
 		},
 	}
 }
@@ -67,7 +77,7 @@ func resourceKongBasicAuthCredentialCreate(d *schema.ResourceData, meta interfac
 
 	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer + "/").Post("basic-auth/").ReceiveSuccess(createdBasicAuthCredential)
 	if error != nil {
-		return fmt.Errorf("Error while creating basicAuthCredential.")
+		return fmt.Errorf("error while creating basicAuthCredential")
 	}
 
 	if response.StatusCode != http.StatusCreated {
@@ -86,7 +96,7 @@ func resourceKongBasicAuthCredentialRead(d *schema.ResourceData, meta interface{
 
 	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer + "/").Path("basic-auth/").Get(basicAuthCredential.ID).ReceiveSuccess(basicAuthCredential)
 	if error != nil {
-		return fmt.Errorf("Error while updating basicAuthCredential.")
+		return fmt.Errorf("error while updating basicAuthCredential")
 	}
 
 	if response.StatusCode == http.StatusNotFound {
@@ -110,7 +120,7 @@ func resourceKongBasicAuthCredentialUpdate(d *schema.ResourceData, meta interfac
 
 	response, error := sling.New().BodyJSON(basicAuthCredential).Path("consumers/").Path(basicAuthCredential.Consumer + "/").Patch("basic-auth/").Path(basicAuthCredential.ID).ReceiveSuccess(updatedBasicAuthCredential)
 	if error != nil {
-		return fmt.Errorf("Error while updating basicAuthCredential.")
+		return fmt.Errorf("error while updating basicAuthCredential")
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -129,7 +139,7 @@ func resourceKongBasicAuthCredentialDelete(d *schema.ResourceData, meta interfac
 
 	response, error := sling.New().Path("consumers/").Path(basicAuthCredential.Consumer + "/").Path("basic-auth/").Delete(basicAuthCredential.ID).ReceiveSuccess(nil)
 	if error != nil {
-		return fmt.Errorf("Error while deleting basicAuthCredential.")
+		return fmt.Errorf("error while deleting basicAuthCredential")
 	}
 
 	if response.StatusCode != http.StatusNoContent {
@@ -145,6 +155,7 @@ func getBasicAuthCredentialFromResourceData(d *schema.ResourceData) *BasicAuthCr
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
 		Consumer: d.Get("consumer").(string),
+		Tags:     helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
 	}
 
 	return basicAuthCredential
@@ -155,4 +166,5 @@ func setBasicAuthCredentialToResourceData(d *schema.ResourceData, basicAuthCrede
 	d.Set("username", basicAuthCredential.Username)
 	d.Set("password", basicAuthCredential.Password)
 	d.Set("consumer", basicAuthCredential.Consumer)
+	d.Set("tags", basicAuthCredential.Tags)
 }

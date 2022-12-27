@@ -2,25 +2,31 @@ package kong
 
 import (
 	"fmt"
+	"net/http"
+
+	"github.com/WeKnowSports/terraform-provider-kong/helper"
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net/http"
-	"strconv"
 )
 
 // Service : Kong Service request object structure
 type Service struct {
-	ID             string `json:"id,omitempty"`
-	Name           string `json:"name,omitempty"`
-	Protocol       string `json:"protocol,omitempty"`
-	Host           string `json:"host,omitempty"`
-	Port           int    `json:"port,omitempty"`
-	Path           string `json:"path,omitempty"`
-	Retries        int    `json:"retries,omitempty"`
-	ConnectTimeout int    `json:"connect_timeout,omitempty"`
-	WriteTimeout   int    `json:"write_timeout,omitempty"`
-	ReadTimeout    int    `json:"read_timeout,omitempty"`
-	Url            string `json:"url,omitempty"`
+	ID                string      `json:"id,omitempty"`
+	Name              string      `json:"name,omitempty"`
+	Retries           int         `json:"retries,omitempty"`
+	Protocol          string      `json:"protocol,omitempty"`
+	Host              string      `json:"host,omitempty"`
+	Port              int         `json:"port,omitempty"`
+	Path              string      `json:"path,omitempty"`
+	ConnectTimeout    int         `json:"connect_timeout,omitempty"`
+	WriteTimeout      int         `json:"write_timeout,omitempty"`
+	ReadTimeout       int         `json:"read_timeout,omitempty"`
+	Tags              []string    `json:"tags"`
+	ClientCertificate Certificate `json:"-"`                          // TO DO: add if statement which assign value only if Protocol is HTTPS
+	TlsVerify         bool        `json:"tls_verify,omitempty"`       //
+	TlsVerifyDepth    int         `json:"tls_verify_depth,omitempty"` //
+	CACertificates    []string    `json:"-"`                          //
+	Enabled           bool        `json:"enabled"`
 }
 
 func resourceKongService() *schema.Resource {
@@ -31,7 +37,7 @@ func resourceKongService() *schema.Resource {
 		Delete: resourceKongServiceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -46,36 +52,27 @@ func resourceKongService() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The protocol used to communicate with the upstream. It can be one of http (default) or https.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return (new == "" && d.Get("url").(string) != "") || (old == "http" && (new == ""))
-				},
+				Default:     "http",
 			},
 
 			"host": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Description: "The host of the upstream server.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return new == "" && d.Get("url").(string) != ""
-				},
 			},
 
 			"port": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "The upstream server port. Defaults to 80.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return new == "0" && d.Get("url").(string) != "" || (old == "80" && new == "0")
-				},
+				Default:     80,
 			},
 
 			"path": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The path to be used in requests to the upstream server. Empty by default.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return new == "" && d.Get("url").(string) != ""
-				},
+				Default:     "/",
 			},
 
 			"retries": {
@@ -106,18 +103,48 @@ func resourceKongService() *schema.Resource {
 				Default:     60000,
 			},
 
-			"url": {
-				Type:        schema.TypeString,
+			"tags": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
-				Description: "Shorthand attribute to set protocol, host, port and path at once. This attribute is write-only (the Admin API never \"returns\" the url).",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					service := getServiceFromResourceData(d)
+				Description: "An optional set of strings associated with the Service for grouping and filtering.",
+			},
 
-					oldUrl := service.Protocol + "://" + service.Host + ":" + strconv.FormatInt(int64(service.Port), 10) + service.Path
-					oldUrlNoPort := service.Protocol + "://" + service.Host + service.Path
+			"client_certificate": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Certificate to be used as client certificate while TLS handshaking to the upstream server",
+				RequiredWith: []string{"protocol"},
+				Default:      nil,
+			},
 
-					return new == oldUrl || new == oldUrlNoPort
-				},
+			"tls_verify": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Whether to enable verification of upstream server TLS certificate. If set to null, then the Nginx default is respected",
+				Default:     nil,
+			},
+
+			"tls_verify_depth": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Maximum depth of chain while verifying Upstream servers TLS certificate. If set to null, then the Nginx default is respected",
+				Default:     nil,
+			},
+
+			"ca_certificates": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "Array of CA Certificate object UUIDs that are used to build the trust store while verifying upstream servers TLS certificate",
+				Default:     nil,
+			},
+
+			"enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Whether the Service is active",
+				Default:     true,
 			},
 		},
 	}
@@ -213,15 +240,22 @@ func getServiceFromResourceData(d *schema.ResourceData) *Service {
 	service := &Service{
 		ID:             d.Id(),
 		Name:           d.Get("name").(string),
+		Retries:        d.Get("retries").(int),
 		Protocol:       d.Get("protocol").(string),
 		Host:           d.Get("host").(string),
 		Port:           d.Get("port").(int),
 		Path:           d.Get("path").(string),
-		Retries:        d.Get("retries").(int),
 		ConnectTimeout: d.Get("connect_timeout").(int),
 		WriteTimeout:   d.Get("write_timeout").(int),
 		ReadTimeout:    d.Get("read_timeout").(int),
-		Url:            d.Get("url").(string),
+		Tags:           helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
+		ClientCertificate: Certificate{
+			ID: d.Get("client_certificate").(string),
+		},
+		TlsVerify:      d.Get("tls_verify").(bool),
+		TlsVerifyDepth: d.Get("tls_verify_depth").(int),
+		CACertificates: helper.ConvertInterfaceArrToStrings(d.Get("ca_certificates").([]interface{})),
+		Enabled:        d.Get("enabled").(bool),
 	}
 
 	return service
@@ -230,13 +264,18 @@ func getServiceFromResourceData(d *schema.ResourceData) *Service {
 func setServiceToResourceData(d *schema.ResourceData, service *Service) {
 	d.SetId(service.ID)
 	_ = d.Set("name", service.Name)
+	_ = d.Set("retries", service.Retries)
 	_ = d.Set("protocol", service.Protocol)
 	_ = d.Set("host", service.Host)
 	_ = d.Set("port", service.Port)
 	_ = d.Set("path", service.Path)
-	_ = d.Set("retries", service.Retries)
 	_ = d.Set("connect_timeout", service.ConnectTimeout)
 	_ = d.Set("write_timeout", service.WriteTimeout)
 	_ = d.Set("read_timeout", service.ReadTimeout)
-	_ = d.Set("url", service.Url)
+	_ = d.Set("tags", service.Tags)
+	_ = d.Set("client_certificate", service.ClientCertificate)
+	_ = d.Set("tls_verify", service.TlsVerify)
+	_ = d.Set("tls_verify_depth", service.TlsVerifyDepth)
+	_ = d.Set("ca_certificates", service.CACertificates)
+	_ = d.Set("enabled", service.Enabled)
 }
