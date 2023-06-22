@@ -13,4 +13,3 @@ Don't forget to copy binary to [terraform local dir](https://developer.hashicorp
 ## Example usage
 
 Please refer to [terraform](./terraform) folder
-
