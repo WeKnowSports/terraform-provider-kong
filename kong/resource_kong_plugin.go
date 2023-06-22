@@ -18,9 +18,9 @@ type Plugin struct {
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
 	Protocols     []string               `json:"protocols,omitempty"`
-	Service       string                 `json:"-"`
-	Route         string                 `json:"-"`
-	Consumer      string                 `json:"-"`
+	Service       map[string]string      `json:"service,omitempty"`
+	Route         map[string]string      `json:"route,omitempty"`
+	Consumer      map[string]string      `json:"consumer,omitempty"`
 	Tags          []string               `json:"tags"`
 	Enabled       bool                   `json:"enabled"`
 }
@@ -59,27 +59,31 @@ func resourceKongPlugin() *schema.Resource {
 			},
 
 			"service": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Default:       nil,
-				ConflictsWith: []string{"route", "consumer"},
-				Description:   "The id of the route to scope this plugin to. f set, the plugin will only activate when receiving requests via one of the routes belonging to the specified Service",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
+				Description: "The id of the route to scope this plugin to. f set, the plugin will only activate when receiving requests via one of the routes belonging to the specified Service",
 			},
 
 			"route": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Default:       nil,
-				ConflictsWith: []string{"service", "consumer"},
-				Description:   "The id of the route to scope this plugin to. If set, the plugin will only activate when receiving requests via the specified route",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
+				Description: "The id of the route to scope this plugin to. If set, the plugin will only activate when receiving requests via the specified route",
 			},
 
 			"consumer": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Default:       nil,
-				ConflictsWith: []string{"service", "route"},
-				Description:   "The id of the consumer to scope this plugin to. If set, the plugin will activate only for requests where the specified has been authenticated",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
+				Description: "The id of the consumer to scope this plugin to. If set, the plugin will activate only for requests where the specified has been authenticated",
+			},
+
+			"consumer_username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
+				Description: "The unique username of the Consumer. Can be used instead of ID.",
 			},
 
 			"tags": {
@@ -103,15 +107,7 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	request := buildModifyRequest(d, meta)
 	p := &Plugin{}
 
-	if service, ok := d.GetOk("service"); ok {
-		request = request.Path("services/").Path(service.(string) + "/")
-	} else if route, ok := d.GetOk("route"); ok {
-		request = request.Path("routes/").Path(route.(string) + "/")
-	} else if consumer, ok := d.GetOk("consumer"); ok {
-		request = request.Path("consumers/").Path(consumer.(string) + "/")
-	}
-
-	response, err := request.Post("plugins/").ReceiveSuccess(p)
+	response, err := request.Post("/plugins/").ReceiveSuccess(p)
 	if err != nil {
 		return fmt.Errorf("error while creating plugin: " + err.Error())
 	}
@@ -184,9 +180,9 @@ func buildModifyRequest(d *schema.ResourceData, meta interface{}) *sling.Sling {
 		ID:        d.Id(),
 		Name:      d.Get("name").(string),
 		Protocols: helper.ConvertInterfaceArrToStrings(d.Get("protocols").([]interface{})),
-		Service:   d.Get("service").(string),
-		Route:     d.Get("route").(string),
-		Consumer:  d.Get("consumer").(string),
+		Service:   helper.SetObjectID(d.Get("service").(string)),
+		Route:     helper.SetObjectID(d.Get("route").(string)),
+		Consumer:  helper.SetConsumerID(d.Get("consumer").(string), d.Get("consumer_username").(string)),
 		Tags:      helper.ConvertInterfaceArrToStrings(d.Get("tags").([]interface{})),
 		Enabled:   d.Get("enabled").(bool),
 	}
@@ -218,17 +214,6 @@ func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) error {
 	d.SetId(plugin.ID)
 
 	_ = d.Set("name", plugin.Name)
-
-	// There are differences in the way service/route IDs are returned from Kong after creation and update between
-	// version before and after 1.0.0. We are risking some drift here. This will be handled in later versions.
-	if service, ok := d.GetOk("service"); ok {
-		plugin.Service = service.(string)
-	} else if route, ok := d.GetOk("route"); ok {
-		plugin.Route = route.(string)
-	} else if consumer, ok := d.GetOk("consumer"); ok {
-		plugin.Consumer = consumer.(string)
-	}
-
 	_ = d.Set("protocols", plugin.Protocols)
 	_ = d.Set("service", plugin.Service)
 	_ = d.Set("route", plugin.Route)
